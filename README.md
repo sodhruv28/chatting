@@ -9,7 +9,6 @@ A simple, modern, and user-friendly real-time chat application — built for sim
 > Note: Replace placeholders (tech stack, demo link, screenshots) with real values for the best presentation.
 
 ## Table of Contents
-- [Demo](#demo)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Quick Start](#quick-start)
