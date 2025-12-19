@@ -21,12 +21,6 @@ A simple, modern, and user-friendly real-time chat application — built for sim
 - [License](#license)
 - [Contact](#contact)
 
-## Demo
-Live demo: [COMING SOON — Add your demo link here](#)  
-Demo credentials (optional):
-- Email: demo@example.com
-- Password: demo123
-
 ## Features
 - Real-time messaging (typing indicators, message receipts)
 - User authentication (email / OAuth ready)
@@ -142,7 +136,7 @@ This project is licensed under the MIT License — see the LICENSE file for deta
 
 ## Contact
 Maintainer: Dhruv S. (@sodhruv28)  
-Email: your-email@example.com
+Email: sodhruv28@gmail.com
 
 ---
 
