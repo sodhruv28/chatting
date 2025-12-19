@@ -1,0 +1,83 @@
+############################
+# Node / npm
+############################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+############################
+# Environment variables
+############################
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+############################
+# Firebase / Secrets
+############################
+firebase.js
+firebaseServiceKey.json
+firebaseServiceKey*.json
+serviceAccountKey.json
+
+############################
+# Build outputs
+############################
+dist/
+build/
+.out/
+coverage/
+
+############################
+# Logs
+############################
+logs/
+*.log
+
+############################
+# OS files
+############################
+.DS_Store
+Thumbs.db
+desktop.ini
+
+############################
+# Editor / IDE
+############################
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+
+############################
+# REST client / test files
+############################
+*.rest
+test.rest
+
+############################
+# Socket / temp files
+############################
+*.sock
+*.pid
+*.pid.lock
+
+############################
+# Optional (keep if not needed)
+############################
+# If you generate certificates for HTTPS
+*.pem
+*.crt
+*.key
+
+############################
+# Misc
+############################
+.cache/
+.temp/
+.tmp/
