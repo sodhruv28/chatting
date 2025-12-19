@@ -1,5 +1,3 @@
-"use client";
-
 import { useCall } from "../context/CallContext";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -12,8 +10,6 @@ export default function Chat() {
   const { friendId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // safely read state (may be undefined on refresh / direct open)
   const canCall = location.state?.canCall ?? true;
   const autoAccept = location.state?.autoAccept ?? false;
 
@@ -46,8 +42,6 @@ export default function Chat() {
     headers: { Authorization: `Bearer ${jwt}` },
   };
 
-  /* ========== helpers ========== */
-
   const toggleMic = () => {
     if (!localStreamRef.current) return;
     localStreamRef.current.getAudioTracks().forEach((track) => {
@@ -66,9 +60,6 @@ export default function Chat() {
     return () => socket.off("message-blocked", onBlocked);
   }, [friendId]);
 
-
-  /* ========== audio outputs ========== */
-
   useEffect(() => {
     navigator.mediaDevices.enumerateDevices().then((devices) => {
       const outputs = devices.filter((d) => d.kind === "audiooutput");
@@ -85,16 +76,12 @@ export default function Chat() {
     setSpeakerId(id);
   };
 
-  /* ========== auto scroll ========== */
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "end",
     });
   }, [messages]);
-
-  /* ========== data fetch ========== */
 
   useEffect(() => {
     if (!jwt || !friendId) return;
@@ -141,12 +128,8 @@ export default function Chat() {
     loadHistory().catch(console.error);
   }, [friendId, jwt, currentUserId]);
 
-  /* ========== chat + presence sockets ========== */
-
   useEffect(() => {
     if (!currentUserId || !friendId) return;
-
-    // join per-chat room; backend builds room from these IDs
     socket.emit("join-chat", { friendId, userId: currentUserId });
 
     const onReceiveMessage = (data) => {
@@ -181,8 +164,6 @@ export default function Chat() {
     };
   }, [friendId, currentUserId]);
 
-  /* ========== WebRTC signaling ========== */
-
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -214,8 +195,6 @@ export default function Chat() {
       socket.off("call:ended", onEnded);
     };
   }, [friendId, currentUserId]);
-
-  /* ========== WebRTC helpers ========== */
 
   const createPeerConnection = (remoteUserId) => {
     const pc = new RTCPeerConnection({
@@ -257,8 +236,6 @@ export default function Chat() {
     return pc;
   };
 
-  /* ========== caller: start call ========== */
-
   const startCall = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -294,8 +271,6 @@ export default function Chat() {
       socket.emit("call:offer", { to: friendId, offer });
     })();
   }, [inCall, pendingStream, friendId]);
-
-  /* ========== callee: accept / reject call ========== */
 
   const acceptCall = async () => {
     if (!incomingCall) return;
@@ -344,8 +319,6 @@ export default function Chat() {
     acceptCall();
   }, [autoAccept, incomingCall, friendId]);
 
-  /* ========== cleanup ========== */
-
   const cleanupCall = (emitEnd = true) => {
     setInCall(false);
     setHasRemote(false);
@@ -377,8 +350,6 @@ export default function Chat() {
 
   const endCall = () => cleanupCall(true);
 
-  /* ========== messaging ========== */
-
   const sendMessage = () => {
     if (!message.trim()) return;
 
@@ -400,8 +371,6 @@ export default function Chat() {
     setMessage("");
   };
 
-  /* ========== UI (unchanged) ========== */
-
   return (
     <>
       <Navbar />
@@ -410,7 +379,6 @@ export default function Chat() {
           className="shadow-sm border-0 fade-in"
           style={{ height: "calc(100vh - 120px)" }}
         >
-          {/* Header */}
           <Card.Header className="bg-white border-bottom p-3">
             <div className="d-flex align-items-center justify-content-between">
               <div className="d-flex align-items-center gap-3">
@@ -474,7 +442,6 @@ export default function Chat() {
             </div>
           </Card.Header>
 
-          {/* Incoming Call Modal */}
           <Modal show={!!incomingCall && !inCall} centered>
             <Modal.Header>
               <Modal.Title>Incoming Video Call</Modal.Title>
@@ -508,14 +475,12 @@ export default function Chat() {
             </Modal.Footer>
           </Modal>
 
-          {/* Video Call Area */}
           {inCall && (
             <div
               className="position-absolute top-0 start-0 w-100 h-100 bg-dark"
               style={{ zIndex: 1000 }}
             >
               <div className="position-relative w-100 h-100">
-                {/* BIG VIDEO */}
                 <video
                   ref={hasRemote ? remoteVideoRef : localVideoRef}
                   autoPlay
@@ -524,8 +489,6 @@ export default function Chat() {
                   className="w-100 h-100"
                   style={{ objectFit: "cover" }}
                 />
-
-                {/* SMALL VIDEO (only when remote exists) */}
                 {hasRemote && (
                   <video
                     ref={localVideoRef}
@@ -542,8 +505,6 @@ export default function Chat() {
                     }}
                   />
                 )}
-
-                {/* Controls */}
                 <div
                   className="position-absolute start-50 translate-middle-x d-flex gap-3 align-items-center p-3 rounded-pill"
                   style={{
@@ -565,8 +526,6 @@ export default function Chat() {
               </div>
             </div>
           )}
-
-          {/* Messages Area */}
           <Card.Body
             className="d-flex flex-column p-0"
             style={{ height: "calc(100% - 140px)" }}
@@ -599,8 +558,6 @@ export default function Chat() {
               ))}
               <div ref={messagesEndRef} />
             </div>
-
-            {/* Input Area */}
             <div className="p-3 border-top bg-white">
               <Form.Group className="d-flex gap-2">
                 <Form.Control

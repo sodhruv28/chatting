@@ -1,9 +1,15 @@
-// src/pages/Profile.jsx
-"use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import { Container, Row, Col, Card, Form, Button, ListGroup, Badge, Modal } from "react-bootstrap";
+import {
+    getAuth,
+    deleteUser,
+    updatePassword,
+    reauthenticateWithCredential,
+    EmailAuthProvider
+} from "firebase/auth";
+
 
 export default function Profile() {
     const jwt = localStorage.getItem("jwt");
@@ -13,7 +19,6 @@ export default function Profile() {
     const [friends, setFriends] = useState([]);
     const [blocked, setBlocked] = useState([]);
     const [saving, setSaving] = useState(false);
-    // const [deleting, setDeleting] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const [form, setForm] = useState({
@@ -37,14 +42,10 @@ export default function Profile() {
             ]);
 
             setUser(meRes.data);
-
-            // ✅ use meRes *here*, not at top-level
             setForm((prev) => ({
                 ...prev,
                 username: meRes.data.username || "",
                 email: meRes.data.email || "",
-                currentPassword: "",
-                newPassword: "",
             }));
 
             setFriends(Array.isArray(friendsRes.data) ? friendsRes.data : []);
@@ -58,19 +59,44 @@ export default function Profile() {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
 
+    const auth = getAuth();
+
+    const changePassword = async (currentPassword, newPassword) => {
+        const user = auth.currentUser;
+
+        if (!user) {
+            alert("No authenticated user");
+            return;
+        }
+        const credential = EmailAuthProvider.credential(
+            user.email,
+            currentPassword
+        );
+
+        try {
+            await reauthenticateWithCredential(user, credential);
+            await updatePassword(user, newPassword);
+
+            alert("Password updated successfully");
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
     const saveProfile = async (e) => {
         e.preventDefault();
         setSaving(true);
+
         try {
+            if (form.currentPassword && form.newPassword) {
+                await changePassword(form.currentPassword, form.newPassword);
+            }
             const res = await axios.patch(
                 "http://localhost:5000/api/users/me",
-                {
-                    username: form.username,
-                    currentPassword: form.currentPassword || undefined,
-                    newPassword: form.newPassword || undefined,
-                },
+                { username: form.username },
                 authHeader
             );
+
             setUser(res.data);
             setForm((prev) => ({
                 ...prev,
@@ -79,13 +105,12 @@ export default function Profile() {
             }));
         } catch (err) {
             console.error("Save profile failed", err);
-            alert(
-                err.response?.data?.message || "Could not save profile / password."
-            );
+            alert(err.response?.data?.message || err.message);
         } finally {
             setSaving(false);
         }
     };
+
 
     const removeFriend = async (id) => {
         if (!window.confirm("Remove this friend?")) return;
@@ -125,19 +150,28 @@ export default function Profile() {
         }
     };
 
-    // const deleteAccount = async () => {
-    //     setDeleting(true);
-    //     try {
-    //         await axios.delete("http://localhost:5000/api/users/me", authHeader);
-    //         localStorage.clear();
-    //         window.location.href = "/register";
-    //     } catch (err) {
-    //         console.error("Delete account failed", err);
-    //         alert("Could not delete account");
-    //     } finally {
-    //         setDeleting(false);
-    //     }
-    // };
+    const deleteAccount = async () => {
+        try {
+            const auth = getAuth();
+            const firebaseUser = auth.currentUser;
+
+            if (!firebaseUser) {
+                alert("No authenticated user");
+                return;
+            }
+            await axios.delete(
+                "http://localhost:5000/api/users/me",
+                authHeader
+            );
+            await deleteUser(firebaseUser);
+            localStorage.clear();
+            window.location.href = "/register";
+
+        } catch (err) {
+            console.error("Delete account failed", err);
+            alert(err.response?.data?.message || err.message);
+        }
+    };
 
     return (
         <>
@@ -154,10 +188,12 @@ export default function Profile() {
                                 <Form onSubmit={saveProfile}>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Display name</Form.Label>
+                                        {/* can not direclty change the username from firebase */}
                                         <Form.Control
                                             type="text"
                                             value={form.username}
                                             onChange={(e) => handleChange("username", e.target.value)}
+                                            // disabled
                                             placeholder="Your name"
                                         />
                                     </Form.Group>
@@ -174,7 +210,9 @@ export default function Profile() {
                                         <Form.Control
                                             type="password"
                                             value={form.currentPassword}
-                                            onChange={(e) => handleChange("currentPassword", e.target.value)}
+                                            onChange={(e) =>
+                                                setForm((prev) => ({ ...prev, currentPassword: e.target.value }))
+                                            }
                                             autoComplete="current-password"
                                         />
                                     </Form.Group>
@@ -184,7 +222,9 @@ export default function Profile() {
                                         <Form.Control
                                             type="password"
                                             value={form.newPassword}
-                                            onChange={(e) => handleChange("newPassword", e.target.value)}
+                                            onChange={(e) =>
+                                                setForm((prev) => ({ ...prev, newPassword: e.target.value }))
+                                            }
                                             placeholder="At least 6 characters"
                                             minLength={6}
                                             autoComplete="new-password"
@@ -199,7 +239,7 @@ export default function Profile() {
                         </Card>
 
                         {/* Danger zone */}
-                        {/* <Card className="shadow-sm border-0 mt-3">
+                        <Card className="shadow-sm border-0 mt-3">
                             <Card.Header className="bg-danger text-white">
                                 Danger zone
                             </Card.Header>
@@ -210,12 +250,12 @@ export default function Profile() {
                                 <Button
                                     variant="outline-danger"
                                     onClick={() => setShowDeleteModal(true)}
-                                    disabled={deleting}
+                                // disabled={deleting}
                                 >
                                     Delete my account
                                 </Button>
                             </Card.Body>
-                        </Card> */}
+                        </Card>
                     </Col>
 
                     {/* Friends & blocked list */}
@@ -323,13 +363,12 @@ export default function Profile() {
                         >
                             Cancel
                         </Button>
-                        {/* <Button
+                        <Button
                             variant="danger"
                             onClick={deleteAccount}
-                            disabled={deleting}
                         >
-                            {deleting ? "Deleting..." : "Yes, delete my account"}
-                        </Button> */}
+                            Yes, delete my account
+                        </Button>
                     </Modal.Footer>
                 </Modal>
             </Container>

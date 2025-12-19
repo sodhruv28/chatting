@@ -8,10 +8,9 @@ import {
   deleteUser,
   searchUser,
   getUserStatus,
-  loginUser,
   getMe,
   updateMe,
-  // deleteMe,
+  deleteMe,
   getBlockedUsers,
   blockUser,
   unblockUser,
@@ -19,13 +18,11 @@ import {
 
 const router = express.Router();
 router.post("/add", createUser);
-router.post("/login", loginUser);
-
 router.get("/", getUsers);
 
 router.get("/me", verifyJWT, getMe);
 router.patch("/me", verifyJWT, updateMe);
-// router.delete("/me", verifyJWT, deleteMe);
+router.delete("/me", verifyJWT, deleteMe);
 
 router.get("/blocked", verifyJWT, getBlockedUsers);
 router.post("/block/:id", verifyJWT, blockUser);

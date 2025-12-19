@@ -32,7 +32,6 @@ export const acceptFriendRequest = async (req, res) => {
     request.status = "accepted";
     await request.save();
 
-    // Add each other as friends
     await User.findByIdAndUpdate(request.sender._id, {
       $addToSet: { friends: request.receiver._id },
     });
@@ -41,7 +40,6 @@ export const acceptFriendRequest = async (req, res) => {
       $addToSet: { friends: request.sender._id },
     });
 
-    // ✅ realtime update to both users
     if (ioInstance) {
       const senderId = String(request.sender._id);
       const receiverId = String(request.receiver._id);
@@ -75,8 +73,6 @@ export const rejectFriendRequest = async (req, res) => {
 
     request.status = "rejected";
     await request.save();
-
-    // ✅ realtime: notify sender their request was rejected
     if (ioInstance) {
       ioInstance
         .to(String(request.sender))
@@ -132,7 +128,6 @@ export const sendFriendRequest = async (req, res) => {
       receiver: receiverId,
     });
 
-    // ✅ realtime: notify receiver immediately
     if (ioInstance) {
       const populatedReq = await request.populate(
         "sender",
@@ -162,7 +157,6 @@ export const removeFriend = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // remove each other from friends arrays
     me.friends = me.friends.filter((f) => String(f) !== String(friendId));
     friend.friends = friend.friends.filter((f) => String(f) !== String(myId));
 

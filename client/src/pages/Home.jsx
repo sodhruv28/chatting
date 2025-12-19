@@ -1,6 +1,3 @@
-// src/pages/Home.jsx
-"use client";
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import socket from "../socket";
@@ -39,12 +36,10 @@ export default function Home() {
 
   const { incomingCall, setIncomingCall } = useCall();
 
-  // auth redirect
   useEffect(() => {
     if (!jwt) navigate("/login");
   }, [jwt, navigate]);
 
-  // initial data
   useEffect(() => {
     if (!jwt) return;
     loadAll();
@@ -74,7 +69,6 @@ export default function Home() {
     setFriends(Array.isArray(res.data) ? res.data : []);
   };
 
-  // friend request socket events
   useEffect(() => {
     if (!jwt) return;
 
@@ -112,7 +106,6 @@ export default function Home() {
     };
   }, [jwt]);
 
-  // search
   const handleSearch = async () => {
     const q = searchQuery.trim();
     if (!q) return;
@@ -198,7 +191,6 @@ export default function Home() {
     navigate(`/chat/${userId}`, { state: { canCall: true } });
   };
 
-  // incoming call from CallContext
   const acceptCall = () => {
     if (!incomingCall) return;
     const { from } = incomingCall;
@@ -222,7 +214,6 @@ export default function Home() {
         style={{ minHeight: "calc(100vh - 80px)" }}
       >
         <Row className="g-4">
-          {/* Left Panel - Search & Requests */}
           <Col lg={7}>
             <Card className="shadow-sm border-0 mb-4 fade-in">
               <Card.Body className="p-4">
@@ -327,8 +318,6 @@ export default function Home() {
                       No pending requests
                     </Alert>
                   )}
-
-                  {/* Incoming call modal */}
                   <Modal show={!!incomingCall} centered backdrop="static">
                     <Modal.Header>
                       <Modal.Title>Incoming Video Call</Modal.Title>
@@ -421,7 +410,6 @@ export default function Home() {
             </Card>
           </Col>
 
-          {/* Right Panel - Friends List */}
           <Col lg={5}>
             <Card className="shadow-sm border-0 fade-in">
               <Card.Body className="p-4">

@@ -1,4 +1,3 @@
-// models/userModel.js
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
@@ -28,7 +27,6 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    // NEW block list
     blocked: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -1,73 +1,34 @@
 import FriendRequest from "../models/FriendRequest.js";
 import User from "../models/userModel.js";
 import mongoose from "mongoose";
+import ChatMessage from "../models/ChatMessage.js";
 import OnlineStatus from "../models/OnlineStatus.js";
 import bcrypt from "bcrypt";
 
-// Create (Register new user)
 export const createUser = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-
-    //Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const { username, email } = req.body;
 
     const newUser = new User({
       username,
       email,
-      password: hashedPassword
+      friends: [],
+      blocked: []
     });
 
     await newUser.save();
 
     res.status(201).json({
-      message: "User created successfully",
+      message: "User profile created",
       user: {
         id: newUser._id,
         username: newUser.username,
-        email: newUser.email
-      }
+        email: newUser.email,
+      },
     });
   } catch (err) {
     console.error("Create User Error:", err);
-    res.status(500).json({
-      message: "Error creating user",
-      error: err.message
-    });
-  }
-};
-
-export const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-
-    //Compare hashed password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-
-    res.status(200).json({
-      message: "Login successful",
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email
-      }
-    });
-  } catch (err) {
-    console.error("Login Error:", err);
-    res.status(500).json({
-      message: "Error logging in",
-      error: err.message
-    });
+    res.status(500).json({ message: "Error creating user" });
   }
 };
 
@@ -106,8 +67,6 @@ export const searchUser = async (req, res) => {
     if (!me) {
       return res.status(404).json({ message: "Current user not found" });
     }
-
-    // find candidate user by username/email
     const candidate = await User.findOne({
       _id: { $ne: currentUserId },
       $or: [
@@ -119,13 +78,9 @@ export const searchUser = async (req, res) => {
     if (!candidate) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    // 1) you blocked them?
     const iBlocked = me.blocked.some(
       (id) => String(id) === String(candidate._id)
     );
-
-    // 2) they blocked you?
     const they = await User.findById(candidate._id).select("blocked");
     const theyBlocked = they.blocked.some(
       (id) => String(id) === String(currentUserId)
@@ -134,8 +89,6 @@ export const searchUser = async (req, res) => {
     if (iBlocked || theyBlocked) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    // existing status logic
     const currentUser = await User.findById(currentUserId);
     const isFriend = currentUser.friends.includes(candidate._id);
 
@@ -169,8 +122,6 @@ export const searchUser = async (req, res) => {
   }
 };
 
-
-// Update User
 export const updateUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -208,7 +159,6 @@ export const updateUser = async (req, res) => {
   }
 };
 
-// Delete User
 export const deleteUser = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -256,46 +206,15 @@ export const getMe = async (req, res) => {
 
 export const updateMe = async (req, res) => {
   try {
-    const { username, currentPassword, newPassword } = req.body;
+    const { username } = req.body;
 
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    /* ---------- Update username ---------- */
-    if (typeof username === "string" && username.trim()) {
+    if (username && username.trim()) {
       user.username = username.trim();
-    }
-
-    /* ---------- Update password (ONLY if password exists) ---------- */
-    if (newPassword) {
-      // 🚨 Firebase users may not have a password
-      if (!user.password) {
-        return res.status(400).json({
-          message: "Password change not allowed for this account",
-        });
-      }
-
-      if (!currentPassword) {
-        return res.status(400).json({
-          message: "Current password is required",
-        });
-      }
-
-      const isMatch = await bcrypt.compare(
-        currentPassword,
-        user.password
-      );
-
-      if (!isMatch) {
-        return res.status(400).json({
-          message: "Current password is incorrect",
-        });
-      }
-
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(newPassword, salt);
     }
 
     await user.save();
@@ -306,13 +225,13 @@ export const updateMe = async (req, res) => {
       email: user.email,
     });
   } catch (err) {
-    console.error("❌ UpdateMe Error:", err);
+    console.error("UpdateMe Error:", err);
     res.status(500).json({
       message: "Error updating profile",
-      error: err.message,
     });
   }
 };
+
 
 
 export const getBlockedUsers = async (req, res) => {
@@ -354,13 +273,9 @@ export const blockUser = async (req, res) => {
     if (!me || !other) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    // add to my blocked list if not already
     if (!me.blocked.some((u) => String(u) === String(targetId))) {
       me.blocked.push(targetId);
     }
-
-    // remove each other from friends
     me.friends = me.friends.filter((f) => String(f) !== String(targetId));
     other.friends = other.friends.filter((f) => String(f) !== String(myId));
 
@@ -400,34 +315,30 @@ export const unblockUser = async (req, res) => {
 };
 
 
-// export const deleteMe = async (req, res) => {
-//   try {
-//     const userId = req.user.id;
+export const deleteMe = async (req, res) => {
+  try {
+    const userId = req.user.id;
 
-//     // remove from other users' friends arrays
-//     await User.updateMany(
-//       { friends: userId },
-//       { $pull: { friends: userId } }
-//     );
+    await User.updateMany(
+      { friends: userId },
+      { $pull: { friends: userId } }
+    );
 
-//     // delete friend requests involving this user
-//     await FriendRequest.deleteMany({
-//       $or: [{ sender: userId }, { receiver: userId }],
-//     });
+    await FriendRequest.deleteMany({
+      $or: [{ sender: userId }, { receiver: userId }],
+    });
 
-//     // TODO: optionally delete ChatMessage docs with sender/receiver = userId
+    await OnlineStatus.deleteOne({ user: userId });
 
-//     const user = await User.findByIdAndDelete(userId);
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
+    await ChatMessage.deleteMany({
+      $or: [{ sender: userId }, { receiver: userId }],
+    });
 
-//     res.status(200).json({ message: "Account deleted" });
-//   } catch (err) {
-//     console.error("DeleteMe Error:", err);
-//     res.status(500).json({
-//       message: "Error deleting account",
-//       error: err.message,
-//     });
-//   }
-// };
+    await User.findByIdAndDelete(userId);
+
+    res.status(200).json({ message: "Account deleted successfully" });
+  } catch (err) {
+    console.error("DeleteMe Error:", err);
+    res.status(500).json({ message: "Delete failed" });
+  }
+};

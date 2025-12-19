@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import axios from "axios"
@@ -31,8 +29,6 @@ export default function Login() {
 
       localStorage.setItem("jwt", res.data.token);
       localStorage.setItem("userId", res.data.user._id);
-
-      // 🔥 connect socket immediately with new JWT
       connectSocket();
 
       navigate("/");

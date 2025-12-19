@@ -1,4 +1,3 @@
-// socket.js (or wherever you define initSocket)
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import User from "./models/userModel.js";
@@ -16,7 +15,6 @@ export function initSocket(server) {
 
   setIo(io);
 
-  // JWT auth middleware
   io.use((socket, next) => {
     try {
       const token = socket.handshake.auth?.token;
@@ -33,22 +31,17 @@ export function initSocket(server) {
   io.on("connection", async (socket) => {
     console.log("Socket connected:", socket.userId);
 
-    // personal room for this user
     socket.join(String(socket.userId));
 
-    // mark online in DB and notify others
     await OnlineStatus.findOneAndUpdate(
       { user: socket.userId },
       { isOnline: true, lastSeen: null },
       { upsert: true }
     );
 
-    // notify everyone except self
     socket.broadcast.emit("user-online", {
       userId: socket.userId,
     });
-
-    /* ====== chat rooms ====== */
 
     socket.on("join-chat", ({ friendId, userId }) => {
       const me = userId || socket.userId;
@@ -56,7 +49,6 @@ export function initSocket(server) {
       socket.join(room);
     });
 
-    /* ====== real-time messaging with block check ====== */
 
     socket.on("send-message", async ({ receiver, message }) => {
       try {
@@ -65,7 +57,6 @@ export function initSocket(server) {
         const senderId = socket.userId;
         const receiverId = receiver;
 
-        // load both users with blocked lists
         const [senderUser, receiverUser] = await Promise.all([
           User.findById(senderId).select("blocked"),
           User.findById(receiverId).select("blocked"),
@@ -79,8 +70,6 @@ export function initSocket(server) {
         const receiverBlocksSender = receiverUser.blocked?.some(
           (id) => String(id) === String(senderId)
         );
-
-        // if either has blocked the other, do nothing (optionally notify)
         if (senderBlocksReceiver || receiverBlocksSender) {
           socket.emit("message-blocked", { to: receiverId });
           return;
@@ -108,14 +97,10 @@ export function initSocket(server) {
       }
     });
 
-    /* ====== typing indicator relay ====== */
-
     socket.on("typing", ({ to }) => {
       if (!to) return;
       io.to(String(to)).emit("typing", { from: socket.userId });
     });
-
-    /* ====== WebRTC signaling ====== */
 
     socket.on("call:offer", async ({ to, offer }) => {
       if (!to || !offer) return;
@@ -154,8 +139,6 @@ export function initSocket(server) {
       if (!to) return;
       io.to(String(to)).emit("call:ended", { from: socket.userId });
     });
-
-    /* ====== disconnect / offline ====== */
 
     socket.on("disconnect", async () => {
       if (!socket.userId) return;
