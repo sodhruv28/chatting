@@ -17,8 +17,6 @@ export default function VideoCall({ friendId, friend }) {
 
   const me = localStorage.getItem("userId");
 
-  /* ================= SOCKET EVENTS ================= */
-
   useEffect(() => {
     const onIncoming = async ({ from, offer }) => {
       setIncomingFrom(from);
@@ -48,8 +46,6 @@ export default function VideoCall({ friendId, friend }) {
       socket.off("call:ended", onEnded);
     };
   }, []);
-
-  /* ================= WEBRTC ================= */
 
   const getMedia = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -101,18 +97,13 @@ export default function VideoCall({ friendId, friend }) {
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
   };
 
-  /* ================= UI ================= */
-
   return (
     <>
-      {/* Call button */}
       {!inCall && !incomingFrom && (
         <button className="btn btn-primary btn-sm" onClick={startCall}>
           📹 Call
         </button>
       )}
-
-      {/* Incoming call */}
       {incomingFrom && !inCall && (
         <div className="incoming-call-banner">
           <span>
@@ -134,8 +125,6 @@ export default function VideoCall({ friendId, friend }) {
           </div>
         </div>
       )}
-
-      {/* Active call */}
       {inCall && (
         <div className="call-container">
           <div className="video-row">

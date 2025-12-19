@@ -8,11 +8,11 @@ export const CallProvider = ({ children }) => {
 
   useEffect(() => {
     const onIncoming = ({ from, offer, caller }) => {
-      setIncomingCall({ from, offer, caller }); // ✅ store caller
+      setIncomingCall({ from, offer, caller });
     };
 
     const onEnded = () => {
-      setIncomingCall(null); // ✅ clear call globally
+      setIncomingCall(null);
     };
 
     socket.on("call:incoming", onIncoming);

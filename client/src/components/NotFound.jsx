@@ -1,5 +1,3 @@
-"use client"
-
 import { useNavigate } from "react-router-dom"
 import { Container, Card, Button } from "react-bootstrap"
 

@@ -518,7 +518,6 @@ export default function Chat() {
                   >
                     🎤
                   </Button>
-
                   <Button variant="danger" onClick={endCall}>
                     ❌
                   </Button>
