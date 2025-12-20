@@ -4,6 +4,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import socket from "../socket";
+import "../styles/modern.css"
 import { Container, Card, Form, Button, Badge, Modal } from "react-bootstrap";
 
 export default function Chat() {
@@ -141,7 +142,7 @@ export default function Chat() {
     };
 
     loadHistory().catch(console.error);
-  }, [friendId, jwt, currentUserId]);   // ✔ only on chat open
+  }, [friendId, jwt, currentUserId]);
 
 
   useEffect(() => {
@@ -463,10 +464,7 @@ export default function Chat() {
     <>
       <Navbar />
       <Container fluid className="p-4" style={{ maxWidth: "1200px" }}>
-        <Card
-          className="shadow-sm border-0 fade-in"
-          style={{ height: "calc(100vh - 120px)" }}
-        >
+        <Card className="shadow-sm border-0 fade-in" style={{ height: "calc(100vh - 120px)" }}>
           <Card.Header className="bg-white border-bottom p-3">
             <div className="d-flex align-items-center justify-content-between">
               <div className="d-flex align-items-center gap-3">
@@ -485,17 +483,14 @@ export default function Chat() {
                   style={{
                     width: "45px",
                     height: "45px",
-                    background:
-                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                   }}
                 >
                   {(friend?.username || friend?.email)?.[0]?.toUpperCase()}
                 </div>
 
                 <div>
-                  <h6 className="mb-0 fw-semibold">
-                    {friend?.username || friend?.email}
-                  </h6>
+                  <h6 className="mb-0 fw-semibold">{friend?.username || friend?.email}</h6>
                   <small className="text-muted">
                     {isOnline ? (
                       <>
@@ -517,12 +512,7 @@ export default function Chat() {
               </div>
 
               {!inCall && canCall && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={startCall}
-                  className="d-flex align-items-center gap-2"
-                >
+                <Button variant="primary" size="sm" onClick={startCall} className="d-flex align-items-center gap-2">
                   <i className="bi bi-camera-video"></i>
                   Video Call
                 </Button>
@@ -540,15 +530,12 @@ export default function Chat() {
                 style={{
                   width: "80px",
                   height: "80px",
-                  background:
-                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                 }}
               >
                 {(friend?.username || friend?.email)?.[0]?.toUpperCase()}
               </div>
-              <h5 className="fw-semibold">
-                {friend?.username || friend?.email}
-              </h5>
+              <h5 className="fw-semibold">{friend?.username || friend?.email}</h5>
               <p className="text-muted">is calling you...</p>
             </Modal.Body>
             <Modal.Footer className="justify-content-center gap-3">
@@ -564,10 +551,7 @@ export default function Chat() {
           </Modal>
 
           {inCall && (
-            <div
-              className="position-absolute top-0 start-0 w-100 h-100 bg-dark"
-              style={{ zIndex: 1000 }}
-            >
+            <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark" style={{ zIndex: 1000 }}>
               <div className="position-relative w-100 h-100">
                 <video
                   ref={hasRemote ? remoteVideoRef : localVideoRef}
@@ -600,50 +584,65 @@ export default function Chat() {
                     background: "rgba(0,0,0,0.7)",
                   }}
                 >
+                  <Dropdown>
+                    <Dropdown.Toggle variant="light" size="sm">
+                      <i className="bi bi-speaker"></i>
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      {speakers.map((s) => (
+                        <Dropdown.Item
+                          key={s.deviceId}
+                          onClick={() => changeSpeaker(s.deviceId)}
+                          active={s.deviceId === speakerId}
+                        >
+                          {s.label || "Speaker"}
+                        </Dropdown.Item>
+                      ))}
+                    </Dropdown.Menu>
+                  </Dropdown>
+
                   <Button
                     variant={micOn ? "light" : "danger"}
                     onClick={toggleMic}
+                    className="rounded-circle"
+                    style={{ width: "45px", height: "45px" }}
                   >
-                    🎤
+                    <i className={`bi bi-mic${micOn ? "" : "-mute"}`}></i>
                   </Button>
-                  <Button variant="danger" onClick={endCall}>
-                    ❌
+
+                  <Button
+                    variant="danger"
+                    onClick={endCall}
+                    className="rounded-circle"
+                    style={{ width: "45px", height: "45px" }}
+                  >
+                    <i className="bi bi-telephone-x"></i>
                   </Button>
                 </div>
               </div>
             </div>
           )}
 
-          <Card.Body
-            className="d-flex flex-column p-0"
-            style={{ height: "calc(100% - 140px)" }}
-          >
-            <div
-              className="flex-grow-1 overflow-auto p-4"
-              style={{ background: "#f8f9fa" }}
-            >
+          <Card.Body className="d-flex flex-column p-0" style={{ height: "calc(100% - 140px)" }}>
+            <div className="flex-grow-1 overflow-auto p-4" style={{ background: "#f8f9fa" }}>
               {messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`d-flex mb-3 ${m.self ? "justify-content-end" : "justify-content-start"
-                    }`}
-                >
+                <div key={m.id} className={`d-flex mb-3 ${m.self ? "justify-content-end" : "justify-content-start"}`}>
                   <div
-                    className={`px-3 py-2 rounded-3 shadow-sm ${m.self ? "bg-primary text-white" : "bg-white text-dark"
-                      }`}
-                    style={{ maxWidth: "70%" }}
+                    className={`px-3 py-2 rounded-3 shadow-sm ${m.self ? "text-white" : "bg-white text-dark"}`}
+                    style={{
+                      maxWidth: "70%",
+                      background: m.self ? "#609672ff" : "#ffffff",
+                    }}
                   >
                     <p className="mb-1">{m.text}</p>
-                    <small
-                      className={m.self ? "text-white-50" : "text-muted"}
-                      style={{ fontSize: "0.7rem" }}
-                    >
+                    <small className={m.self ? "text-white-50" : "text-muted"} style={{ fontSize: "0.7rem" }}>
                       {m.time}
                     </small>
                     {m.self && (
-                      <span className="ms-2">
-                        {m.isRead ? "🔵🔵" : "✔✔"}
-                      </span>
+                      <i
+                        className={`bi bi-check2-all ms-1 ${m.isRead ? "text-info" : "text-white-50"}`}
+                        style={{ fontSize: "0.9rem" }}
+                      />
                     )}
                   </div>
                 </div>
@@ -660,12 +659,7 @@ export default function Chat() {
                   onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                   size="lg"
                 />
-                <Button
-                  variant="primary"
-                  onClick={sendMessage}
-                  size="lg"
-                  className="px-4"
-                >
+                <Button variant="primary" onClick={sendMessage} size="lg" className="px-4">
                   <i className="bi bi-send-fill"></i>
                 </Button>
               </Form.Group>
@@ -674,5 +668,5 @@ export default function Chat() {
         </Card>
       </Container>
     </>
-  );
+  )
 }

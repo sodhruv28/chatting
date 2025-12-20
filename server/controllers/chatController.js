@@ -117,3 +117,34 @@ export const markMessagesRead = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getLastMessages = async (req, res) => {
+  const userId = req.user.id;
+
+  const lastMessages = await ChatMessage.aggregate([
+    {
+      $match: {
+        $or: [
+          { sender: new mongoose.Types.ObjectId(userId) },
+          { receiver: new mongoose.Types.ObjectId(userId) },
+        ],
+      },
+    },
+    { $sort: { createdAt: -1 } },
+    {
+      $group: {
+        _id: {
+          $cond: [
+            { $eq: ["$sender", new mongoose.Types.ObjectId(userId)] },
+            "$receiver",
+            "$sender",
+          ],
+        },
+        lastMessageAt: { $first: "$createdAt" },
+        lastMessage: { $first: "$message" },
+      },
+    },
+  ]);
+
+  res.json(lastMessages);
+};
