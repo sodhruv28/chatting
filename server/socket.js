@@ -31,6 +31,7 @@ export function initSocket(server) {
   io.on("connection", async (socket) => {
     console.log("Socket connected:", socket.userId);
 
+    // personal room for online/typing/calls
     socket.join(String(socket.userId));
 
     await OnlineStatus.findOneAndUpdate(
@@ -43,19 +44,20 @@ export function initSocket(server) {
       userId: socket.userId,
     });
 
-    socket.on("join-chat", ({ friendId, userId }) => {
-      const me = userId || socket.userId;
-      const room = [me, friendId].sort().join("_");
+    // ✅ Both users must join the SAME room: "<smallerId>_<largerId>"
+    socket.on("join-chat", ({ friendId }) => {
+      if (!friendId) return;
+      const room = [String(socket.userId), String(friendId)].sort().join("_");
       socket.join(room);
+      console.log("joined room", room);
     });
-
 
     socket.on("send-message", async ({ receiver, message }) => {
       try {
-        if (!receiver || !message) return;
+        if (!receiver || !message?.trim()) return;
 
-        const senderId = socket.userId;
-        const receiverId = receiver;
+        const senderId = String(socket.userId);
+        const receiverId = String(receiver);
 
         const [senderUser, receiverUser] = await Promise.all([
           User.findById(senderId).select("blocked"),
@@ -65,33 +67,42 @@ export function initSocket(server) {
         if (!senderUser || !receiverUser) return;
 
         const senderBlocksReceiver = senderUser.blocked?.some(
-          (id) => String(id) === String(receiverId)
+          (id) => String(id) === receiverId
         );
         const receiverBlocksSender = receiverUser.blocked?.some(
-          (id) => String(id) === String(senderId)
+          (id) => String(id) === senderId
         );
         if (senderBlocksReceiver || receiverBlocksSender) {
           socket.emit("message-blocked", { to: receiverId });
           return;
         }
 
+        // ✅ use the SAME room as join-chat
         const room = [senderId, receiverId].sort().join("_");
 
         const chat = await ChatMessage.create({
           sender: senderId,
           receiver: receiverId,
-          message,
+          chatId: room,          // optional but useful
+          message: message.trim(),
           isRead: false,
         });
+        console.log("joined room", room);
+        console.log("msg", senderId, "→", receiverId, "room", room, chat.message);
 
+        // ✅ emit to the room so BOTH get it instantly
         io.to(room).emit("receive-message", {
           _id: chat._id,
           sender: chat.sender,
           receiver: chat.receiver,
           message: chat.message,
           createdAt: chat.createdAt,
-          isRead: chat.isRead,
+          isRead: chat.isRead,      // false
+          status: "delivered",
         });
+
+
+        console.log("msg", senderId, "→", receiverId, "room", room, chat.message);
       } catch (err) {
         console.error("send-message error:", err);
       }
@@ -99,6 +110,7 @@ export function initSocket(server) {
 
     socket.on("typing", ({ to }) => {
       if (!to) return;
+      // typing goes to personal room of receiver
       io.to(String(to)).emit("typing", { from: socket.userId });
     });
 

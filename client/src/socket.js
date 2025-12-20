@@ -14,10 +14,7 @@ export function connectSocket() {
     console.warn("[socket] No JWT found, not connecting");
     return;
   }
-
-  // Attach token for server-side auth middleware
   socket.auth = { token };
-
   if (!socket.connected) {
     socket.connect();
   }

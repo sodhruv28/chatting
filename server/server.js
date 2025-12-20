@@ -29,7 +29,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/friends", friendRoutes);
 
-initSocket(server);
+const io = initSocket(server);   
+app.set("io", io);               
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

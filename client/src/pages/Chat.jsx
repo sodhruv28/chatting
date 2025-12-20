@@ -15,7 +15,15 @@ export default function Chat() {
 
   const jwt = localStorage.getItem("jwt");
   const currentUserId = localStorage.getItem("userId");
+  useEffect(() => {
+    if (socket.connected) return;
 
+    const token = localStorage.getItem("jwt");
+    if (!token) return;
+
+    socket.auth = { token };
+    socket.connect();
+  }, []);
   const { incomingCall, setIncomingCall } = useCall();
 
   const [message, setMessage] = useState("");
@@ -50,6 +58,7 @@ export default function Chat() {
     });
   };
 
+  // block alert
   useEffect(() => {
     const onBlocked = ({ to }) => {
       if (String(to) === String(friendId)) {
@@ -60,6 +69,7 @@ export default function Chat() {
     return () => socket.off("message-blocked", onBlocked);
   }, [friendId]);
 
+  // audio output list
   useEffect(() => {
     navigator.mediaDevices.enumerateDevices().then((devices) => {
       const outputs = devices.filter((d) => d.kind === "audiooutput");
@@ -76,6 +86,7 @@ export default function Chat() {
     setSpeakerId(id);
   };
 
+  // scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -83,6 +94,7 @@ export default function Chat() {
     });
   }, [messages]);
 
+  // load friend data
   useEffect(() => {
     if (!jwt || !friendId) return;
     axios
@@ -91,6 +103,7 @@ export default function Chat() {
       .catch(console.error);
   }, [friendId, jwt]);
 
+  // load online status (initial)
   useEffect(() => {
     if (!jwt || !friendId) return;
     const loadStatus = async () => {
@@ -107,8 +120,9 @@ export default function Chat() {
     loadStatus();
   }, [friendId, jwt]);
 
+  // load chat history once
   useEffect(() => {
-    if (!jwt || !currentUserId) return;
+    if (!jwt || !currentUserId || !friendId) return;
 
     const loadHistory = async () => {
       const res = await axios.get(
@@ -121,29 +135,95 @@ export default function Chat() {
           text: msg.message,
           self: String(msg.sender) === String(currentUserId),
           time: new Date(msg.createdAt).toLocaleTimeString(),
+          isRead: msg.isRead,
         }))
       );
     };
 
     loadHistory().catch(console.error);
-  }, [friendId, jwt, currentUserId]);
+  }, [friendId, jwt, currentUserId]);   // ✔ only on chat open
+
 
   useEffect(() => {
+    if (!friendId || !currentUserId || !jwt) return;
+    if (messages.length === 0) return;
+
+    const markMessagesRead = async () => {
+      try {
+        await axios.patch(
+          `http://localhost:5000/api/chats/mark-read/${friendId}`,
+          {},
+          authHeader
+        );
+        // locally mark friend’s messages as read too (for your own Chat UI)
+        setMessages((prev) =>
+          prev.map((m) =>
+            !m.self ? { ...m, isRead: true } : m
+          )
+        );
+      } catch (err) {
+        console.error("Mark read failed", err);
+      }
+    };
+
+    const t = setTimeout(markMessagesRead, 800);
+    return () => clearTimeout(t);
+  }, [friendId, currentUserId, jwt, messages.length]);
+
+
+
+  // realtime chat + online events
+  useEffect(() => {
     if (!currentUserId || !friendId) return;
-    socket.emit("join-chat", { friendId, userId: currentUserId });
+    if (!socket.connected) {
+      console.log("Chat: socket not connected yet, skipping listeners");
+      return;
+    }
+
+    socket.emit("join-chat", { friendId });
 
     const onReceiveMessage = (data) => {
-      if (String(data.sender) === String(currentUserId)) return;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: data._id,
-          text: data.message,
-          self: false,
-          time: new Date(data.createdAt).toLocaleTimeString(),
-        },
-      ]);
+      setMessages((prev) => {
+        // replace temp message if it was mine
+        const tempIndex = prev.findIndex(
+          (m) => m.self && m.id.startsWith("tmp-")
+        );
+
+        if (tempIndex !== -1 && String(data.sender) === String(currentUserId)) {
+          const updated = [...prev];
+          updated[tempIndex] = {
+            id: data._id,
+            text: data.message,
+            self: true,
+            time: new Date(data.createdAt).toLocaleTimeString(),
+            isRead: data.isRead,
+          };
+          return updated;
+        }
+
+        // otherwise it's incoming
+        return [
+          ...prev,
+          {
+            id: data._id,
+            text: data.message,
+            self: false,
+            time: new Date(data.createdAt).toLocaleTimeString(),
+            isRead: data.isRead,
+          },
+        ];
+      });
     };
+
+
+    const onMessagesRead = ({ by }) => {
+      if (String(by) !== String(friendId)) return;
+
+      setMessages((prev) =>
+        prev.map((m) => (m.self ? { ...m, isRead: true } : m))
+      );
+    };
+
 
     const onUserOnline = ({ userId }) => {
       if (String(userId) === String(friendId)) setIsOnline(true);
@@ -154,16 +234,20 @@ export default function Chat() {
     };
 
     socket.on("receive-message", onReceiveMessage);
+    socket.on("messages:read", onMessagesRead);
     socket.on("user-online", onUserOnline);
     socket.on("user-offline", onUserOffline);
 
     return () => {
       socket.off("receive-message", onReceiveMessage);
+      socket.off("messages:read", onMessagesRead);
       socket.off("user-online", onUserOnline);
       socket.off("user-offline", onUserOffline);
     };
-  }, [friendId, currentUserId]);
+  }, [friendId, currentUserId, socket.connected]);
 
+
+  // WebRTC signal handlers
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -353,19 +437,23 @@ export default function Chat() {
   const sendMessage = () => {
     if (!message.trim()) return;
 
+    const tempId = `tmp-${Date.now()}`;
+
+    // optimistic UI
     setMessages((prev) => [
       ...prev,
       {
-        id: `tmp-${Date.now()}`,
-        text: message,
+        id: tempId,
+        text: message.trim(),
         self: true,
         time: new Date().toLocaleTimeString(),
+        isRead: false,
       },
     ]);
 
     socket.emit("send-message", {
       receiver: friendId,
-      message,
+      message: message.trim(),
     });
 
     setMessage("");
@@ -525,6 +613,7 @@ export default function Chat() {
               </div>
             </div>
           )}
+
           <Card.Body
             className="d-flex flex-column p-0"
             style={{ height: "calc(100% - 140px)" }}
@@ -546,12 +635,16 @@ export default function Chat() {
                   >
                     <p className="mb-1">{m.text}</p>
                     <small
-                      className={`${m.self ? "text-white-50" : "text-muted"
-                        }`}
+                      className={m.self ? "text-white-50" : "text-muted"}
                       style={{ fontSize: "0.7rem" }}
                     >
                       {m.time}
                     </small>
+                    {m.self && (
+                      <span className="ms-2">
+                        {m.isRead ? "🔵🔵" : "✔✔"}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

@@ -35,6 +35,8 @@ export default function Home() {
   const [friends, setFriends] = useState([]);
 
   const { incomingCall, setIncomingCall } = useCall();
+  const [unreadCounts, setUnreadCounts] = useState({});
+
 
   useEffect(() => {
     if (!jwt) navigate("/login");
@@ -48,10 +50,26 @@ export default function Home() {
   const loadAll = async () => {
     try {
       await Promise.all([fetchRequests(), fetchFriends()]);
+      await fetchUnreadCounts();
     } finally {
       setLoading(false);
     }
   };
+
+  const fetchUnreadCounts = async () => {
+    const res = await axios.get(
+      "http://localhost:5000/api/chats/unread-counts",
+      authHeader
+    );
+    // res.data = [{ friendId, count }]
+    const map = {};
+    res.data.forEach((row) => {
+      map[row.friendId] = row.count;
+    });
+    setUnreadCounts(map);
+  };
+
+
 
   const fetchRequests = async () => {
     const res = await axios.get(
@@ -438,42 +456,51 @@ export default function Home() {
                 )}
 
                 <ListGroup variant="flush">
-                  {friends.map((f) => (
-                    <ListGroup.Item
-                      key={f._id}
-                      action
-                      onClick={() => openChat(f._id)}
-                      className="px-0 border-bottom cursor-pointer"
-                      style={{ cursor: "pointer" }}
-                    >
-                      <div className="d-flex align-items-center justify-content-between">
-                        <div className="d-flex align-items-center gap-3">
-                          <div
-                            className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                            style={{
-                              width: "50px",
-                              height: "50px",
-                              background:
-                                "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                            }}
-                          >
-                            {(f.username || f.email)[0].toUpperCase()}
+                  {friends.map((f) => {
+                    const count = unreadCounts[f._id] || 0;
+                    return (
+                      <ListGroup.Item
+                        key={f._id}
+                        action
+                        onClick={() => openChat(f._id)}
+                        className="px-0 border-bottom cursor-pointer"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <div className="d-flex align-items-center justify-content-between">
+                          <div className="d-flex align-items-center gap-3">
+                            <div
+                              className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                              style={{
+                                width: "50px",
+                                height: "50px",
+                                background:
+                                  "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                              }}
+                            >
+                              {(f.username || f.email)[0].toUpperCase()}
+                            </div>
+                            <div>
+                              <h6 className="mb-1 fw-semibold">
+                                {f.username || f.email}
+                              </h6>
+                              <p className="text-muted mb-0 small">{f.email}</p>
+                            </div>
                           </div>
-                          <div>
-                            <h6 className="mb-1 fw-semibold">
-                              {f.username || f.email}
-                            </h6>
-                            <p className="text-muted mb-0 small">
-                              {f.email}
-                            </p>
+
+                          <div className="d-flex align-items-center gap-2">
+                            {count > 0 && (
+                              <Badge bg="danger" pill>
+                                {count}
+                              </Badge>
+                            )}
+                            <i className="bi bi-chevron-right text-muted"></i>
                           </div>
                         </div>
-
-                        <i className="bi bi-chevron-right text-muted"></i>
-                      </div>
-                    </ListGroup.Item>
-                  ))}
+                      </ListGroup.Item>
+                    );
+                  })}
                 </ListGroup>
+
               </Card.Body>
             </Card>
           </Col>

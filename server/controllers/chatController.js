@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import ChatMessage from "../models/ChatMessage.js";
 
 export const getChats = async (req, res) => {
@@ -51,3 +52,68 @@ export const markAsRead = async (req, res) => {
   }
 };
 
+export const getUnreadCounts = async (req, res) => {
+  try {
+    const userId = req.user.id; // or req.user._id if that's what your auth sets
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    const agg = await ChatMessage.aggregate([
+      {
+        $match: {
+          receiver: userObjectId,
+          isRead: false,
+        },
+      },
+      {
+        $group: {
+          _id: "$sender",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const result = agg.map((row) => ({
+      friendId: row._id.toString(),
+      count: row.count,
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error("getUnreadCounts error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+export const markMessagesRead = async (req, res) => {
+  try {
+    const userId = req.user.id;      // who read
+    const friendId = req.params.friendId; // sender
+
+    await ChatMessage.updateMany(
+      {
+        sender: friendId,
+        receiver: userId,
+        isRead: false,
+      },
+      { $set: { isRead: true } }
+    );
+
+    // 🔥 THIS IS THE MAGIC LINE
+    const io = req.app.get("io");
+    if (io) {
+      io.to(String(friendId)).emit("messages:read", {
+        by: userId,   // who read the messages
+      });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("markMessagesRead error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
