@@ -121,7 +121,7 @@ JWT_SECRET=your_jwt_secret
 ---
 
 ### Run backend:
-### npm run dev
+    npm run dev
 ### Frontend Setup
     cd client
     npm install
@@ -138,17 +138,17 @@ JWT_SECRET=your_jwt_secret
 ---
 
 ### 🧪 How to Use
-Register or login using email
+- Register or login using email
 
-Search users and send friend requests
+- Search users and send friend requests
 
-Accept request to start chatting
+- Accept request to start chatting
 
-Send messages in real time
+- Send messages in real time
 
-See online status & read receipts
+- See online status & read receipts
 
-Start one-to-one video calls
+- Start one-to-one video calls
 
 ---
 
@@ -164,17 +164,17 @@ Start one-to-one video calls
 
 --- 
 ### 🧭 Roadmap
- Group chats
+ ##Group chats
 
- Message reactions & emojis
+ - Message reactions & emojis
 
- Media sharing (images/videos)
+ - Media sharing (images/videos)
 
- Push notifications
+ - Push notifications
 
- Mobile app (React Native)
+- Mobile app (React Native)
 
- End-to-end encryption
+ - End-to-end encryption
 
 ---
 
