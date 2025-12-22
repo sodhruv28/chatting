@@ -87,16 +87,35 @@ export const rejectFriendRequest = async (req, res) => {
 
 export const getFriendsList = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate(
-      "friends",
-      "username email"
+    const user = await User.findById(req.user.id)
+      .populate("friends", "username email")
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const friends = user.friends.map((friend) => {
+      const meta = user.friendsMeta?.[friend._id.toString()] || {};
+      return {
+        ...friend,
+        lastMessageAt: meta.lastMessageAt || new Date(0),
+      };
+    });
+
+    friends.sort(
+      (a, b) =>
+        new Date(b.lastMessageAt).getTime() -
+        new Date(a.lastMessageAt).getTime()
     );
 
-    res.status(200).json(user.friends);
+    res.status(200).json(friends);
   } catch (err) {
+    console.error("getFriendsList error:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 export const sendFriendRequest = async (req, res) => {
   try {

@@ -31,7 +31,6 @@ export function initSocket(server) {
   io.on("connection", async (socket) => {
     console.log("Socket connected:", socket.userId);
 
-    // personal room for online/typing/calls
     socket.join(String(socket.userId));
 
     await OnlineStatus.findOneAndUpdate(
@@ -44,7 +43,6 @@ export function initSocket(server) {
       userId: socket.userId,
     });
 
-    // ✅ Both users must join the SAME room: "<smallerId>_<largerId>"
     socket.on("join-chat", ({ friendId }) => {
       if (!friendId) return;
       const room = [String(socket.userId), String(friendId)].sort().join("_");
@@ -72,45 +70,49 @@ export function initSocket(server) {
         const receiverBlocksSender = receiverUser.blocked?.some(
           (id) => String(id) === senderId
         );
+
         if (senderBlocksReceiver || receiverBlocksSender) {
           socket.emit("message-blocked", { to: receiverId });
           return;
         }
-
-        // ✅ use the SAME room as join-chat
         const room = [senderId, receiverId].sort().join("_");
-
         const chat = await ChatMessage.create({
           sender: senderId,
           receiver: receiverId,
-          chatId: room,          // optional but useful
+          chatId: room,
           message: message.trim(),
           isRead: false,
         });
-        console.log("joined room", room);
-        console.log("msg", senderId, "→", receiverId, "room", room, chat.message);
 
-        // ✅ emit to the room so BOTH get it instantly
+        const now = new Date();
+
+        await Promise.all([
+          User.findByIdAndUpdate(senderId, {
+            [`friendsMeta.${receiverId}.lastMessageAt`]: now,
+          }),
+          User.findByIdAndUpdate(receiverId, {
+            [`friendsMeta.${senderId}.lastMessageAt`]: now,
+          }),
+        ]);
+
         io.to(room).emit("receive-message", {
           _id: chat._id,
           sender: chat.sender,
           receiver: chat.receiver,
           message: chat.message,
           createdAt: chat.createdAt,
-          isRead: chat.isRead,      // false
+          isRead: chat.isRead,
           status: "delivered",
         });
 
-
-        console.log("msg", senderId, "→", receiverId, "room", room, chat.message);
       } catch (err) {
         console.error("send-message error:", err);
       }
     });
 
+
     socket.on("typing", ({ to }) => {
       if (!to) return;
-      // typing goes to personal room of receiver
       io.to(String(to)).emit("typing", { from: socket.userId });
     });
 

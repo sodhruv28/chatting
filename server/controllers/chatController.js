@@ -91,8 +91,8 @@ export const getUnreadCounts = async (req, res) => {
 
 export const markMessagesRead = async (req, res) => {
   try {
-    const userId = req.user.id;      // who read
-    const friendId = req.params.friendId; // sender
+    const userId = req.user.id;     
+    const friendId = req.params.friendId; 
 
     await ChatMessage.updateMany(
       {
@@ -103,17 +103,14 @@ export const markMessagesRead = async (req, res) => {
       { $set: { isRead: true } }
     );
 
-    // 🔥 THIS IS THE MAGIC LINE
     const io = req.app.get("io");
-    if (io) {
-      io.to(String(friendId)).emit("messages:read", {
-        by: userId,   // who read the messages
-      });
-    }
+    io.to(String(friendId)).emit("messages:read", {
+      by: userId,          
+      //friendId: userId,
+    });
 
     res.json({ success: true });
   } catch (err) {
-    console.error("markMessagesRead error:", err);
     res.status(500).json({ error: err.message });
   }
 };

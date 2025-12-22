@@ -27,6 +27,13 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    friendsMeta: {
+      type: Map,
+      of: new mongoose.Schema({
+        lastMessageAt: Date,
+      }),
+      default: {},
+    },
     blocked: [
       {
         type: mongoose.Schema.Types.ObjectId,

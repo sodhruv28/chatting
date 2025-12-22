@@ -5,7 +5,15 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import socket from "../socket";
 import "../styles/modern.css"
-import { Container, Card, Form, Button, Badge, Modal } from "react-bootstrap";
+import {
+  Container,
+  Card,
+  Form,
+  Button,
+  Badge,
+  Modal,
+  Dropdown,
+} from "react-bootstrap";
 
 export default function Chat() {
   const { friendId } = useParams();
@@ -59,7 +67,10 @@ export default function Chat() {
     });
   };
 
-  // block alert
+  const handleTyping = () => {
+    socket.emit("typing", { to: friendId });
+  };
+
   useEffect(() => {
     const onBlocked = ({ to }) => {
       if (String(to) === String(friendId)) {
@@ -70,7 +81,6 @@ export default function Chat() {
     return () => socket.off("message-blocked", onBlocked);
   }, [friendId]);
 
-  // audio output list
   useEffect(() => {
     navigator.mediaDevices.enumerateDevices().then((devices) => {
       const outputs = devices.filter((d) => d.kind === "audiooutput");
@@ -87,7 +97,6 @@ export default function Chat() {
     setSpeakerId(id);
   };
 
-  // scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -95,7 +104,6 @@ export default function Chat() {
     });
   }, [messages]);
 
-  // load friend data
   useEffect(() => {
     if (!jwt || !friendId) return;
     axios
@@ -104,7 +112,6 @@ export default function Chat() {
       .catch(console.error);
   }, [friendId, jwt]);
 
-  // load online status (initial)
   useEffect(() => {
     if (!jwt || !friendId) return;
     const loadStatus = async () => {
@@ -121,7 +128,6 @@ export default function Chat() {
     loadStatus();
   }, [friendId, jwt]);
 
-  // load chat history once
   useEffect(() => {
     if (!jwt || !currentUserId || !friendId) return;
 
@@ -156,7 +162,6 @@ export default function Chat() {
           {},
           authHeader
         );
-        // locally mark friend’s messages as read too (for your own Chat UI)
         setMessages((prev) =>
           prev.map((m) =>
             !m.self ? { ...m, isRead: true } : m
@@ -171,9 +176,6 @@ export default function Chat() {
     return () => clearTimeout(t);
   }, [friendId, currentUserId, jwt, messages.length]);
 
-
-
-  // realtime chat + online events
   useEffect(() => {
     if (!currentUserId || !friendId) return;
     if (!socket.connected) {
@@ -185,7 +187,6 @@ export default function Chat() {
 
     const onReceiveMessage = (data) => {
       setMessages((prev) => {
-        // replace temp message if it was mine
         const tempIndex = prev.findIndex(
           (m) => m.self && m.id.startsWith("tmp-")
         );
@@ -201,8 +202,6 @@ export default function Chat() {
           };
           return updated;
         }
-
-        // otherwise it's incoming
         return [
           ...prev,
           {
@@ -216,7 +215,6 @@ export default function Chat() {
       });
     };
 
-
     const onMessagesRead = ({ by }) => {
       if (String(by) !== String(friendId)) return;
 
@@ -224,7 +222,6 @@ export default function Chat() {
         prev.map((m) => (m.self ? { ...m, isRead: true } : m))
       );
     };
-
 
     const onUserOnline = ({ userId }) => {
       if (String(userId) === String(friendId)) setIsOnline(true);
@@ -247,8 +244,6 @@ export default function Chat() {
     };
   }, [friendId, currentUserId, socket.connected]);
 
-
-  // WebRTC signal handlers
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -439,8 +434,6 @@ export default function Chat() {
     if (!message.trim()) return;
 
     const tempId = `tmp-${Date.now()}`;
-
-    // optimistic UI
     setMessages((prev) => [
       ...prev,
       {
@@ -655,7 +648,10 @@ export default function Chat() {
                   type="text"
                   placeholder="Type a message..."
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    handleTyping();
+                  }}
                   onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                   size="lg"
                 />
