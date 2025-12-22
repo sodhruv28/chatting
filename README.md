@@ -1,236 +1,321 @@
-💬 Chatting – Real-Time Communication App
+Chatting ✨
+[![Repository](https://img.shields.io/badge/repo-chatting-18181b?style=for-the-badge[![Tech](https://img.shields.io/badge/stack-MERN%20%2B%20Socket.IO-0ea5e9?style[![Status](https://img.shields.io/badge/status-active-22c55e?style=for-the-badge[![License: MIT](https://img.shields.io/badge/license-MIT-16a34a?style=for-the-badge
+A modern real‑time chat application with 1‑to‑1 messaging, online status, WebRTC video calls, and WhatsApp‑style read receipts.
+Ideal as a learning project or a solid foundation for production messaging features.
 
+Live demo & detailed docs: add links here once deployed.
 
+Table of Contents
+Features
 
+Architecture
 
+Tech Stack
 
+Getting Started
 
-A modern, real-time chat application with friend management, online status, read receipts, and one-to-one video calling.
-Built to demonstrate real-world full-stack concepts using React, Node.js, MongoDB, Socket.IO, and WebRTC.
+Environment Setup
 
-🚀 Designed for learning, internships, interviews, and real-life usage.
+Core Features & Flows
 
-✨ Key Features
-🔐 Authentication & Security
+Screenshots
 
-Firebase Authentication (Email/Password)
+Roadmap
 
-JWT-based session handling
+Contributing
 
-Protected routes & APIs
+License
 
-👥 Friends & Requests
+Contact
 
-Search users by email
+Features
+Messaging
+Real‑time 1‑to‑1 chat using Socket.IO.
 
-Send / accept / reject friend requests
+Optimistic UI for outgoing messages (messages appear instantly, then confirmed by server).
 
-Friend-only chat access
+Online / offline presence with last‑seen tracking.
 
-💬 Real-Time Chat
+Typing indicators.
 
-Instant messaging using Socket.IO
+WhatsApp‑style delivery state:
 
-Typing indicators
+Single tick: sent / stored.
 
-Message delivery & read receipts (✔ delivered / ✔✔ read)
+Double tick: delivered.
 
-Unread message count badges
+Double blue tick: read.
 
-Chat history stored in MongoDB
+Calls
+1‑to‑1 WebRTC video calling.
 
-🟢 Online Presence
+Incoming call modal with accept / decline actions.
 
-Live online/offline status
+Toggle mic on/off and switch audio output device (where supported).
 
-Last seen tracking
+Clean call teardown on end / disconnect.
 
-🎥 Video Calling
+Friends & Requests
+Email‑based search to find users.
 
-One-to-one video calls using WebRTC
+Friend request workflow:
 
-Call accept / reject flow
+Send request.
 
-Audio & video controls
+Accept / reject.
 
-Real-time signaling via Socket.IO
+Real‑time updates for requests and acceptances.
 
-🎨 UI & UX
+Conversations panel:
 
-Clean, responsive UI (desktop & mobile)
+Sorted by last message time.
 
-Modern animations & transitions
+Unread count badge per conversation.
 
-Smooth conversation reordering (latest chat on top)
+Last message preview.
 
-🛠️ Tech Stack
-Frontend
+UX & UI
+Fully responsive layout (desktop‑first, mobile friendly).
 
-React (Vite)
+Modern Bootstrap‑based design with gradients and subtle shadows.
 
-React Bootstrap
+Persistent auth (JWT in localStorage).
 
-Socket.IO Client
+Toasts / alerts for common error states (blocked, not found, etc.).
 
-WebRTC
+Architecture
+High‑level architecture for this project:
 
-Custom CSS (modern theme)
+Client (React)
 
-Backend
+Routing with React Router.
 
-Node.js
+Context for call signaling state.
 
-Express.js
+Socket client initialized once and shared across pages.
+
+Pages:
+
+Home: search, requests, conversations list.
+
+Chat: messaging + calling UI.
+
+Login, Register, Profile.
+
+Server (Node.js + Express)
+
+REST APIs for auth, users, friends, chat history.
+
+Socket.IO server for:
+
+Private rooms per user and per conversation.
+
+Message delivery, read receipts, typing, and call signaling.
+
+Database (MongoDB + Mongoose)
+
+User: auth, block list, profile fields.
+
+ChatMessage: sender, receiver, chatId, message, timestamps, isRead.
+
+FriendRequest / Friendship (depending on your schema).
+
+OnlineStatus: isOnline, lastSeen.
+
+Tech Stack
+Update this section if you change anything:
+
+Frontend:
+
+React + Vite
+
+React Router
+
+React Bootstrap + Bootstrap Icons
+
+WebRTC APIs (getUserMedia, RTCPeerConnection)
+
+Backend:
+
+Node.js + Express
 
 Socket.IO
 
-MongoDB Atlas
+JWT authentication
 
-Mongoose
+Database:
 
-Authentication
+MongoDB + Mongoose
 
-Firebase Authentication
+Deployment (suggested):
 
-JWT (JSON Web Tokens)
+Frontend: Vercel / Netlify
 
-Deployment Ready
+Backend: Render / Railway / DigitalOcean
 
-Environment-based configs
+DB: MongoDB Atlas
 
-Scalable architecture
-
-⚙️ Project Architecture
-chatting/
-│
-├── client/            # React frontend
-│   ├── src/
-│   ├── styles/
-│   └── socket.js
-│
-├── server/            # Node.js backend
-│   ├── controllers/
-│   ├── models/
-│   ├── routes/
-│   ├── socket.js
-│   └── server.js
-│
-└── README.md
-
-🚀 Getting Started
+Getting Started
 Prerequisites
-
-Node.js (v16+ recommended)
+Node.js ≥ 18.x
 
 npm or yarn
 
-MongoDB Atlas account
+MongoDB instance (local or cloud)
 
-Firebase project
+A modern browser with WebRTC support
 
-📦 Installation
-
-Clone the repository:
-
+Clone the repository
+bash
 git clone https://github.com/sodhruv28/chatting.git
 cd chatting
+Install dependencies
+Backend:
 
-Backend setup
+bash
 cd server
 npm install
+Frontend:
 
-
-Create .env in server/:
-
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-
-
-Run backend:
-
-npm run dev
-
-Frontend setup
-cd client
+bash
+cd ../client
 npm install
+Environment Setup
+Backend .env (in server/)
+bash
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/chatting
+JWT_SECRET=your_jwt_secret_here
 
+# CORS / client origin
+CLIENT_URL=http://localhost:5173
+Frontend .env (in client/)
+bash
+VITE_API_BASE_URL=http://localhost:5000
+VITE_SOCKET_URL=http://localhost:5000
+Adjust keys to match your actual config.
 
-Create .env in client/:
+Running Locally
+Start backend:
 
-VITE_API_URL=http://localhost:5000
-
-
-Run frontend:
-
+bash
+cd server
 npm run dev
+Start frontend:
 
+bash
+cd ../client
+npm run dev
+Open the printed Vite URL (usually http://localhost:5173) in two different browser windows to simulate two users.
 
-Open 👉 http://localhost:5173
+Core Features & Flows
+Authentication
+Register with email and password.
 
-🧪 Usage
+Login returns a JWT stored in localStorage.
 
-Register / Login using email
+All protected routes and socket connections use this token for auth.
 
-Search users and send friend requests
+Friends & Conversations
+From Home:
 
-Accept requests to start chatting
+Search users by email and send friend requests.
 
-Send real-time messages
+Accept / reject requests in real time.
 
-See read receipts & online status
+The Conversations list shows:
 
-Start a video call with a friend
+Avatar initials.
 
-📸 Screenshots (Add Yours)
+Last message preview.
 
-Add screenshots or GIFs here for best presentation
+Unread count badge.
 
-docs/screenshots/
-├── home.png
-├── chat.png
-├── video-call.png
+Sorted by most recent activity.
 
+Chat
+Open /chat/:friendId from the conversations list.
 
-Example:
+Messages:
 
-![Chat Screen](docs/screenshots/chat.png)
+Fetched via REST for history.
 
-🧭 Roadmap
+New messages delivered via Socket.IO.
 
- Group chats
+isRead updated when the receiver opens the chat, driving the tick icons.
 
- Message reactions & emojis
+Typing state and online presence use per‑user “personal rooms”.
 
- Media sharing (images/videos)
+Calls
+Click “Video Call” in the chat header.
 
- Push notifications
+WebRTC flow:
 
- Mobile app (React Native)
+Caller obtains media stream and creates offer.
 
- End-to-end encryption
+Offer/answer and ICE candidates are exchanged over Socket.IO.
 
-🤝 Contributing
+Both sides can mute mic and end the call.
 
-Contributions are welcome!
+Screenshots
+Replace these with real screenshots / GIFs from your app:
 
-1. Fork the repo
-2. Create your feature branch (git checkout -b feature/new-feature)
-3. Commit changes (git commit -m "feat: add new feature")
-4. Push to branch
-5. Open a Pull Request
+docs/screenshots/home.png — Home + Conversations
 
-📄 License
+docs/screenshots/chat.png — Chat + video call overlay
 
-Licensed under the MIT License
-You are free to use, modify, and distribute this project.
+docs/screenshots/mobile.png — Optional mobile view
 
-📬 Contact
+You can also add a short GIF demonstrating:
 
-Dhruv Solanki
-📧 Email: sodhruv28@gmail.com
-🐙 GitHub: @sodhruv28
+Sending a message
 
-⭐ If you like this project
+Unread badge increment
 
-Give it a star ⭐ on GitHub — it really helps!
+Blue tick update when the other user reads
+
+Roadmap
+Planned / nice‑to‑have improvements:
+
+ Message reactions and replies
+
+ Full‑text search across conversations
+
+ Group chats and broadcast lists
+
+ Push notifications (web + mobile)
+
+ End‑to‑end encryption toggle per chat
+
+ Mobile client (React Native / Flutter)
+
+Feel free to open an issue with feature requests or ideas.
+
+Contributing
+Contributions are very welcome.
+
+Fork the repo
+
+Create a feature branch:
+git checkout -b feat/your-feature-name
+
+Commit your changes:
+git commit -m "feat: add your feature"
+
+Push and open a Pull Request against main
+
+Include screenshots / demo for UI changes where possible
+
+Before submitting a PR:
+
+Run linters and tests (when added).
+
+Keep changes focused and small.
+
+License
+This project is licensed under the MIT License.
+See the LICENSE file for full details.
+
+Contact
+Maintainer: Dhruv S. (@sodhruv28)
+Email: sodhruv28@gmail.com
