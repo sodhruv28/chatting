@@ -105,38 +105,39 @@ Built using **React, Node.js, MongoDB, Socket.IO, Firebase Authentication, and W
 ## 📦 Installation
 
 ### Clone the repository
-git clone https://github.com/sodhruv28/chatting.git
-cd chatting
-Backend Setup
+    git clone https://github.com/sodhruv28/chatting.git
+    cd chatting
 
-cd server
-npm install
-Create .env inside server/:
+### Backend Setup
+    cd server
+    npm install
 
-env
-Copy code
+
+### Create .env inside server/:
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
-Run backend:
 
+---
 
-npm run dev
-Frontend Setup
+### Run backend:
+### npm run dev
+### Frontend Setup
+    cd client
+    npm install
 
-cd client
-npm install
+### Create .env inside client/:
 
-Create .env inside client/:
+    VITE_API_URL=http://localhost:5000
+    
+### Run frontend:
+    npm run dev
+### Open in browser:
+    http://localhost:5173
+    
+---
 
-VITE_API_URL=http://localhost:5000
-Run frontend:
-
-npm run dev
-Open in browser:
-
-http://localhost:5173
-🧪 How to Use
+### 🧪 How to Use
 Register or login using email
 
 Search users and send friend requests
@@ -149,17 +150,20 @@ See online status & read receipts
 
 Start one-to-one video calls
 
-📸 Screenshots (Add Yours)
-stylus
-Copy code
-docs/screenshots/
-├── home.png
-├── chat.png
-├── video-call.png
-Example:
+---
 
-![Chat Screen](docs/screenshots/chat.png)
-🧭 Roadmap
+### 📸 Screenshots (Add Yours)
+
+    docs/screenshots/
+    ├── home.png
+    ├── chat.png
+    ├── video-call.png
+    Example:
+    
+    ![Chat Screen](docs/screenshots/chat.png)
+
+--- 
+### 🧭 Roadmap
  Group chats
 
  Message reactions & emojis
@@ -172,7 +176,9 @@ Example:
 
  End-to-end encryption
 
-🤝 Contributing
+---
+
+### 🤝 Contributing
 Contributions are welcome!
 
 1. Fork the repository
@@ -185,12 +191,16 @@ Contributions are welcome!
 📄 License
 This project is licensed under the MIT License.
 
-📬 Contact
+---
+
+### 📬 Contact
 Dhruv Solanki
 📧 Email: sodhruv28@gmail.com
 🐙 GitHub: https://github.com/sodhruv28
 
-⭐ If you like this project, give it a star on GitHub!
+---
+
+### ⭐ If you like this project, give it a star on GitHub!
 
 If you want, next I can:
 - Make this **resume-perfect**
