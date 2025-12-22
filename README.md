@@ -1,142 +1,236 @@
-# Chatting ✨
+💬 Chatting – Real-Time Communication App
 
-[![Repository](https://img.shields.io/badge/repo-chatting-blue?style=for-the-badge)]()
-[![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)]()
-[![Status](https://img.shields.io/badge/status-active-brightgreen?style=for-the-badge)]()
 
-A simple, modern, and user-friendly real-time chat application — built for simplicity, speed, and delightful interactions. Perfect for learning, prototyping, or integrating into your product.
 
-> Note: Replace placeholders (tech stack, demo link, screenshots) with real values for the best presentation.
 
-## Table of Contents
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Screenshots](#screenshots)
-- [Contributing](#contributing)
-- [Roadmap](#roadmap)
-- [License](#license)
-- [Contact](#contact)
 
-## Features
-- Real-time messaging (typing indicators, message receipts)
-- User authentication (email / OAuth ready)
-- Responsive UI for desktop & mobile
-- Room-based or direct messaging
-- Message persistence and simple search
-- Customizable themes and emoji support
 
-## Tech Stack
-This project is scaffolded to be flexible — update this to match your implementation:
-- Frontend: React / Vue / Svelte / Vanilla
-- Backend: Node.js (Express) / Django / Flask / Firebase
-- Real-time: Socket.IO / WebSockets / Pusher
-- Database: PostgreSQL / MongoDB / Firebase
-- Deployment: Vercel / Netlify / Heroku / DigitalOcean
+A modern, real-time chat application with friend management, online status, read receipts, and one-to-one video calling.
+Built to demonstrate real-world full-stack concepts using React, Node.js, MongoDB, Socket.IO, and WebRTC.
 
-## Quick Start
+🚀 Designed for learning, internships, interviews, and real-life usage.
 
+✨ Key Features
+🔐 Authentication & Security
+
+Firebase Authentication (Email/Password)
+
+JWT-based session handling
+
+Protected routes & APIs
+
+👥 Friends & Requests
+
+Search users by email
+
+Send / accept / reject friend requests
+
+Friend-only chat access
+
+💬 Real-Time Chat
+
+Instant messaging using Socket.IO
+
+Typing indicators
+
+Message delivery & read receipts (✔ delivered / ✔✔ read)
+
+Unread message count badges
+
+Chat history stored in MongoDB
+
+🟢 Online Presence
+
+Live online/offline status
+
+Last seen tracking
+
+🎥 Video Calling
+
+One-to-one video calls using WebRTC
+
+Call accept / reject flow
+
+Audio & video controls
+
+Real-time signaling via Socket.IO
+
+🎨 UI & UX
+
+Clean, responsive UI (desktop & mobile)
+
+Modern animations & transitions
+
+Smooth conversation reordering (latest chat on top)
+
+🛠️ Tech Stack
+Frontend
+
+React (Vite)
+
+React Bootstrap
+
+Socket.IO Client
+
+WebRTC
+
+Custom CSS (modern theme)
+
+Backend
+
+Node.js
+
+Express.js
+
+Socket.IO
+
+MongoDB Atlas
+
+Mongoose
+
+Authentication
+
+Firebase Authentication
+
+JWT (JSON Web Tokens)
+
+Deployment Ready
+
+Environment-based configs
+
+Scalable architecture
+
+⚙️ Project Architecture
+chatting/
+│
+├── client/            # React frontend
+│   ├── src/
+│   ├── styles/
+│   └── socket.js
+│
+├── server/            # Node.js backend
+│   ├── controllers/
+│   ├── models/
+│   ├── routes/
+│   ├── socket.js
+│   └── server.js
+│
+└── README.md
+
+🚀 Getting Started
 Prerequisites
-- Node.js >= 14.x (if using Node)
-- npm or yarn
-- A running database (Postgres, MongoDB) if persistence needed
 
-Clone the repo
-```bash
+Node.js (v16+ recommended)
+
+npm or yarn
+
+MongoDB Atlas account
+
+Firebase project
+
+📦 Installation
+
+Clone the repository:
+
 git clone https://github.com/sodhruv28/chatting.git
 cd chatting
-```
 
-Install dependencies (example for Node)
-```bash
-# backend
+Backend setup
 cd server
 npm install
 
-# frontend
-cd ../client
-npm install
-```
 
-Environment
-```bash
-# create .env in server/ (example)
-PORT=3000
-DATABASE_URL=postgres://user:pass@localhost:5432/chatdb
-JWT_SECRET=your_secret_here
-SOCKET_PATH=/socket
+Create .env in server/:
 
-# frontend .env (example)
-REACT_APP_API_URL=http://localhost:3000
-```
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
 
-Run locally
-```bash
-# start backend
-cd server
+
+Run backend:
+
 npm run dev
 
-# start frontend
-cd ../client
-npm start
-```
+Frontend setup
+cd client
+npm install
 
-Now open http://localhost:3000 (or the port your frontend uses) to see the app.
 
-## Configuration
-- .env.example included — copy to `.env` and fill values
-- To switch real-time provider, update server real-time adapter and corresponding client settings
-- For production, set secure cookies, HTTPS, and environment-specific settings
+Create .env in client/:
 
-## Usage
-- Create an account or sign in with demo credentials
-- Join or create chat rooms
-- Send messages, react, and view who is typing
-- Admins can moderate rooms and ban users (if implemented)
+VITE_API_URL=http://localhost:5000
 
-API (example)
-- POST /api/auth/register — Register a user
-- POST /api/auth/login — Login and receive JWT
-- GET /api/rooms — List available rooms
-- POST /api/messages — Send a message (authenticated)
 
-(Adjust endpoints to match your implementation.)
+Run frontend:
 
-## Screenshots
-Replace these with actual screenshots/gifs of your app:
+npm run dev
 
-![Chatting - Home](docs/screenshots/home.png)
-![Chatting - Conversation](docs/screenshots/chat.png)
 
-Tip: Add an animated GIF of sending messages for a better first impression.
+Open 👉 http://localhost:5173
 
-## Contributing
-Thanks for wanting to contribute! A quick guide:
+🧪 Usage
+
+Register / Login using email
+
+Search users and send friend requests
+
+Accept requests to start chatting
+
+Send real-time messages
+
+See read receipts & online status
+
+Start a video call with a friend
+
+📸 Screenshots (Add Yours)
+
+Add screenshots or GIFs here for best presentation
+
+docs/screenshots/
+├── home.png
+├── chat.png
+├── video-call.png
+
+
+Example:
+
+![Chat Screen](docs/screenshots/chat.png)
+
+🧭 Roadmap
+
+ Group chats
+
+ Message reactions & emojis
+
+ Media sharing (images/videos)
+
+ Push notifications
+
+ Mobile app (React Native)
+
+ End-to-end encryption
+
+🤝 Contributing
+
+Contributions are welcome!
+
 1. Fork the repo
-2. Create a feature branch: `git checkout -b feat/awesome`
-3. Commit your changes: `git commit -m "feat: add awesome feature"`
-4. Push and open a Pull Request
-5. Be sure to run linters and tests, and keep PRs small and focused
+2. Create your feature branch (git checkout -b feature/new-feature)
+3. Commit changes (git commit -m "feat: add new feature")
+4. Push to branch
+5. Open a Pull Request
 
-Please open an issue if you want to discuss a large change or feature.
+📄 License
 
-## Roadmap
-- [ ] Reactions & threaded replies
-- [ ] Message search & filters
-- [ ] Mobile app (React Native / Flutter)
-- [ ] End-to-end encryption option
+Licensed under the MIT License
+You are free to use, modify, and distribute this project.
 
-Feel free to add feature requests to the Issues tab.
+📬 Contact
 
-## License
-This project is licensed under the MIT License — see the LICENSE file for details.
+Dhruv Solanki
+📧 Email: sodhruv28@gmail.com
+🐙 GitHub: @sodhruv28
 
-## Contact
-Maintainer: Dhruv S. (@sodhruv28)  
-Email: sodhruv28@gmail.com
+⭐ If you like this project
 
----
-
-Made with ❤️ — update the badges, screenshots, and demo link to make this README truly yours.
+Give it a star ⭐ on GitHub — it really helps!
