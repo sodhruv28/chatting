@@ -74,24 +74,21 @@ Built using **React, Node.js, MongoDB, Socket.IO, Firebase Authentication, and W
 
 ## 📂 Project Structure
 
-chatting/
-│
-├── client/ # React frontend
-│ ├── src/
-│ ├── styles/
-│ └── socket.js
-│
-├── server/ # Node.js backend
-│ ├── controllers/
-│ ├── models/
-│ ├── routes/
-│ ├── socket.js
-│ └── server.js
-│
-└── README.md
-
-yaml
-Copy code
+    chatting/
+    │
+    ├── client/ # React frontend
+    │ ├── src/
+    │ ├── styles/
+    │ └── socket.js
+    │
+    ├── server/ # Node.js backend
+    │ ├── controllers/
+    │ ├── models/
+    │ ├── routes/
+    │ ├── socket.js
+    │ └── server.js
+    │
+    └── README.md
 
 ---
 
@@ -108,12 +105,10 @@ Copy code
 ## 📦 Installation
 
 ### Clone the repository
-```bash
 git clone https://github.com/sodhruv28/chatting.git
 cd chatting
 Backend Setup
-bash
-Copy code
+
 cd server
 npm install
 Create .env inside server/:
@@ -125,28 +120,21 @@ MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 Run backend:
 
-bash
-Copy code
+
 npm run dev
 Frontend Setup
-bash
-Copy code
+
 cd client
 npm install
+
 Create .env inside client/:
 
-env
-Copy code
 VITE_API_URL=http://localhost:5000
 Run frontend:
 
-bash
-Copy code
 npm run dev
 Open in browser:
 
-dts
-Copy code
 http://localhost:5173
 🧪 How to Use
 Register or login using email
@@ -170,8 +158,6 @@ docs/screenshots/
 ├── video-call.png
 Example:
 
-md
-Copy code
 ![Chat Screen](docs/screenshots/chat.png)
 🧭 Roadmap
  Group chats
@@ -189,8 +175,6 @@ Copy code
 🤝 Contributing
 Contributions are welcome!
 
-bash
-Copy code
 1. Fork the repository
 2. Create a feature branch
    git checkout -b feature/awesome-feature
@@ -207,9 +191,6 @@ Dhruv Solanki
 🐙 GitHub: https://github.com/sodhruv28
 
 ⭐ If you like this project, give it a star on GitHub!
-
-markdown
-Copy code
 
 If you want, next I can:
 - Make this **resume-perfect**
