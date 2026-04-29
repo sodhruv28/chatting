@@ -187,7 +187,7 @@ export default function Chat() {
                     {m.time}
                   </span>
                   {m.self && (
-                    <i className={`bi bi-check2-all text-[14px] ${m.isRead ? "text-indigo-200" : "text-white/40"}`} />
+                    <i className={`bi bi-check2-all text-[14px] ${m.isRead ? "text-sky-300" : "text-white/40"}`} />
                   )}
                 </div>
               </div>

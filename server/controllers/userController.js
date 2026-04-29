@@ -45,9 +45,13 @@ export const getUsers = async (req, res) => {
 // Get Single User by ID
 export const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).select("-password").lean();
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.status(200).json(user);
+    
+    const statusDoc = await OnlineStatus.findOne({ user: user._id });
+    const isOnline = statusDoc ? !!statusDoc.isOnline : false;
+    
+    res.status(200).json({ ...user, isOnline });
   } catch (err) {
     res.status(500).json({ message: "Error fetching user", error: err.message });
   }
