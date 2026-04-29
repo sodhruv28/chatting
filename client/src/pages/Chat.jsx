@@ -40,6 +40,7 @@ export default function Chat() {
     fetchData()
 
     socket.emit("chat:join", { friendId })
+    socket.emit("chat:read-all", { friendId })
 
     const onMessage = (msg) => {
       if (msg.sender === friendId) {
