@@ -2,6 +2,7 @@ import express from "express";
 import {
   sendFriendRequest,
   getIncomingRequests,
+  getSentRequests,
   acceptFriendRequest,
   rejectFriendRequest,
   removeFriend,
@@ -12,11 +13,12 @@ import { verifyJWT } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/send", verifyJWT, sendFriendRequest);
+router.get("/", verifyJWT, getFriendsList);
 router.get("/requests", verifyJWT, getIncomingRequests);
-router.put("/accept/:id", verifyJWT, acceptFriendRequest);
-router.put("/reject/:id", verifyJWT, rejectFriendRequest);
+router.get("/requests/sent", verifyJWT, getSentRequests);
+router.post("/request", verifyJWT, sendFriendRequest);
+router.post("/accept", verifyJWT, acceptFriendRequest);
+router.post("/reject", verifyJWT, rejectFriendRequest);
 router.delete("/:friendId", verifyJWT, removeFriend);
-router.get("/list", verifyJWT, getFriendsList);
 
 export default router;

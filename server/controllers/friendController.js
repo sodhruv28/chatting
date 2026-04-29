@@ -1,5 +1,6 @@
 import FriendRequest from "../models/FriendRequest.js";
 import User from "../models/userModel.js";
+import OnlineStatus from "../models/OnlineStatus.js";
 
 let ioInstance;
 export const setIo = (io) => {
@@ -19,9 +20,23 @@ export const getIncomingRequests = async (req, res) => {
   }
 };
 
+export const getSentRequests = async (req, res) => {
+  try {
+    const requests = await FriendRequest.find({
+      sender: req.user.id,
+      status: "pending",
+    }).populate("receiver", "username email");
+
+    res.status(200).json(requests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export const acceptFriendRequest = async (req, res) => {
   try {
-    const request = await FriendRequest.findById(req.params.id)
+    const { requestId } = req.body;
+    const request = await FriendRequest.findById(requestId)
       .populate("sender", "username email")
       .populate("receiver", "username email");
 
@@ -63,7 +78,7 @@ export const acceptFriendRequest = async (req, res) => {
 
 export const rejectFriendRequest = async (req, res) => {
   try {
-    const requestId = req.params.id;
+    const { requestId } = req.body;
 
     const request = await FriendRequest.findById(requestId);
 
@@ -95,10 +110,18 @@ export const getFriendsList = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    const friendIds = user.friends.map(f => f._id);
+    const statuses = await OnlineStatus.find({ user: { $in: friendIds } });
+    const statusMap = statuses.reduce((acc, status) => {
+      acc[status.user.toString()] = status.isOnline;
+      return acc;
+    }, {});
+
     const friends = user.friends.map((friend) => {
       const meta = user.friendsMeta?.[friend._id.toString()] || {};
       return {
         ...friend,
+        isOnline: statusMap[friend._id.toString()] || false,
         lastMessageAt: meta.lastMessageAt || new Date(0),
       };
     });
@@ -115,6 +138,7 @@ export const getFriendsList = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 export const sendFriendRequest = async (req, res) => {
@@ -147,17 +171,17 @@ export const sendFriendRequest = async (req, res) => {
       receiver: receiverId,
     });
 
+    const populatedReq = await FriendRequest.findById(request._id)
+      .populate("sender", "username email")
+      .populate("receiver", "username email");
+
     if (ioInstance) {
-      const populatedReq = await request.populate(
-        "sender",
-        "username email"
-      );
       ioInstance
         .to(String(receiverId))
         .emit("friend-request:received", populatedReq);
     }
 
-    res.status(201).json({ message: "Friend request sent", request });
+    res.status(201).json({ message: "Friend request sent", request: populatedReq });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

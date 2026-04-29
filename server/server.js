@@ -22,8 +22,24 @@ if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
 const app = express();
 const server = http.createServer(app);
 
-const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-app.use(cors({ origin: frontendUrl }));
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow any origin in development or match allowedOrigins
+    if (!origin || origin.startsWith("http://localhost:") || allowedOrigins.includes(origin)) {
+      callback(null, origin || true);
+    } else {
+      callback(null, false);
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 mongoose
@@ -43,3 +59,15 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Graceful shutdown
+const shutdown = () => {
+    console.log("Shutting down server...");
+    server.close(() => {
+        console.log("Server closed.");
+        process.exit(0);
+    });
+};
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

@@ -1,6 +1,3 @@
-"use client"
-
-import "bootstrap/dist/css/bootstrap.min.css"
 import { useEffect } from "react"
 import { connectSocket } from "./socket"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
@@ -11,13 +8,20 @@ import NotFound from "./components/NotFound.jsx"
 import Chat from "./pages/Chat.jsx"
 import Me from "./pages/Profile.jsx"
 import ProtectedRoute from "./components/ProtectedRoute.jsx"
-import "./styles/modern.css"
 
 const App = () => {
   useEffect(() => {
-    const token = localStorage.getItem("jwt")
+    const token = localStorage.getItem("token")
     if (token) {
-      connectSocket()
+      connectSocket(token)
+    }
+
+    // Theme initialization
+    const savedTheme = localStorage.getItem("theme") || "light";
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
   }, [])
 

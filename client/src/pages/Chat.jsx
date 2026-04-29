@@ -1,668 +1,240 @@
-import { useCall } from "../context/CallContext";
-import { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
-import Navbar from "../components/Navbar";
-import socket from "../socket";
-import "../styles/modern.css"
-import {
-  Container,
-  Card,
-  Form,
-  Button,
-  Badge,
-  Modal,
-  Dropdown,
-} from "react-bootstrap";
+import { useState, useEffect, useRef } from "react"
+import { useParams, useNavigate } from "react-router-dom"
+import api from "../api/axios"
+import socket from "../socket"
+import Navbar from "../components/Navbar"
 
 export default function Chat() {
-  const { friendId } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const canCall = location.state?.canCall ?? true;
-  const autoAccept = location.state?.autoAccept ?? false;
-
-  const jwt = localStorage.getItem("jwt");
-  const currentUserId = localStorage.getItem("userId");
-  useEffect(() => {
-    if (socket.connected) return;
-
-    const token = localStorage.getItem("jwt");
-    if (!token) return;
-
-    socket.auth = { token };
-    socket.connect();
-  }, []);
-  const { incomingCall, setIncomingCall } = useCall();
-
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [friend, setFriend] = useState(null);
-  const [isOnline, setIsOnline] = useState(false);
-
-  const [micOn, setMicOn] = useState(true);
-  const [hasRemote, setHasRemote] = useState(false);
-  const [speakers, setSpeakers] = useState([]);
-  const [speakerId, setSpeakerId] = useState("");
-
-  const [inCall, setInCall] = useState(false);
-  const [pendingStream, setPendingStream] = useState(null);
-
-  const messagesEndRef = useRef(null);
-  const localVideoRef = useRef(null);
-  const remoteVideoRef = useRef(null);
-  const peerRef = useRef(null);
-  const localStreamRef = useRef(null);
-  const remoteStreamRef = useRef(null);
-
-  const authHeader = {
-    headers: { Authorization: `Bearer ${jwt}` },
-  };
-
-  const toggleMic = () => {
-    if (!localStreamRef.current) return;
-    localStreamRef.current.getAudioTracks().forEach((track) => {
-      track.enabled = !track.enabled;
-      setMicOn(track.enabled);
-    });
-  };
-
-  const handleTyping = () => {
-    socket.emit("typing", { to: friendId });
-  };
+  const { friendId } = useParams()
+  const [friend, setFriend] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [message, setMessage] = useState("")
+  const [isOnline, setIsOnline] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
+  const [otherTyping, setOtherTyping] = useState(false)
+  
+  const navigate = useNavigate()
+  const messagesEndRef = useRef(null)
+  const user = JSON.parse(localStorage.getItem("user") || "{}")
 
   useEffect(() => {
-    const onBlocked = ({ to }) => {
-      if (String(to) === String(friendId)) {
-        alert("You can't send messages to this user.");
-      }
-    };
-    socket.on("message-blocked", onBlocked);
-    return () => socket.off("message-blocked", onBlocked);
-  }, [friendId]);
-
-  useEffect(() => {
-    navigator.mediaDevices.enumerateDevices().then((devices) => {
-      const outputs = devices.filter((d) => d.kind === "audiooutput");
-      setSpeakers(outputs);
-    });
-  }, []);
-
-  const changeSpeaker = async (id) => {
-    if (!remoteVideoRef.current?.setSinkId) {
-      alert("Speaker selection not supported");
-      return;
-    }
-    await remoteVideoRef.current.setSinkId(id);
-    setSpeakerId(id);
-  };
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
-  }, [messages]);
-
-  useEffect(() => {
-    if (!jwt || !friendId) return;
-    axios
-      .get(`http://localhost:5000/api/users/${friendId}`, authHeader)
-      .then((res) => setFriend(res.data))
-      .catch(console.error);
-  }, [friendId, jwt]);
-
-  useEffect(() => {
-    if (!jwt || !friendId) return;
-    const loadStatus = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/users/status/${friendId}`,
-          authHeader
-        );
-        setIsOnline(res.data.isOnline);
+        const [fRes, mRes] = await Promise.all([
+          api.get(`/users/${friendId}`),
+          api.get(`/messages/${friendId}`)
+        ])
+        setFriend(fRes.data)
+        setMessages(mRes.data.map(m => ({
+          id: m._id,
+          text: m.message,
+          self: m.sender === user._id,
+          time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isRead: m.isRead
+        })))
+        setIsOnline(fRes.data.isOnline)
       } catch (err) {
-        console.error("Status API error", err);
+        console.error("Failed to fetch chat data:", err)
       }
-    };
-    loadStatus();
-  }, [friendId, jwt]);
+    }
+    fetchData()
 
-  useEffect(() => {
-    if (!jwt || !currentUserId || !friendId) return;
+    socket.emit("chat:join", { friendId })
 
-    const loadHistory = async () => {
-      const res = await axios.get(
-        `http://localhost:5000/api/chats/history/${friendId}`,
-        authHeader
-      );
-      setMessages(
-        res.data.map((msg) => ({
+    const onMessage = (msg) => {
+      if (msg.sender === friendId) {
+        setMessages(prev => [...prev, {
           id: msg._id,
           text: msg.message,
-          self: String(msg.sender) === String(currentUserId),
-          time: new Date(msg.createdAt).toLocaleTimeString(),
-          isRead: msg.isRead,
-        }))
-      );
-    };
-
-    loadHistory().catch(console.error);
-  }, [friendId, jwt, currentUserId]);
-
-
-  useEffect(() => {
-    if (!friendId || !currentUserId || !jwt) return;
-    if (messages.length === 0) return;
-
-    const markMessagesRead = async () => {
-      try {
-        await axios.patch(
-          `http://localhost:5000/api/chats/mark-read/${friendId}`,
-          {},
-          authHeader
-        );
-        setMessages((prev) =>
-          prev.map((m) =>
-            !m.self ? { ...m, isRead: true } : m
-          )
-        );
-      } catch (err) {
-        console.error("Mark read failed", err);
+          self: false,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isRead: false
+        }])
+        socket.emit("chat:read-all", { friendId })
       }
-    };
-
-    const t = setTimeout(markMessagesRead, 800);
-    return () => clearTimeout(t);
-  }, [friendId, currentUserId, jwt, messages.length]);
-
-  useEffect(() => {
-    if (!currentUserId || !friendId) return;
-    if (!socket.connected) {
-      console.log("Chat: socket not connected yet, skipping listeners");
-      return;
     }
 
-    socket.emit("join-chat", { friendId });
+    const onReadStatus = ({ from }) => {
+      if (from === friendId) {
+        setMessages(prev => prev.map(m => ({ ...m, isRead: true })));
+      }
+    }
 
-    const onReceiveMessage = (data) => {
-      setMessages((prev) => {
-        const tempIndex = prev.findIndex(
-          (m) => m.self && m.id.startsWith("tmp-")
-        );
+    const onUserStatus = ({ userId, isOnline }) => {
+      if (userId === friendId) setIsOnline(isOnline)
+    }
 
-        if (tempIndex !== -1 && String(data.sender) === String(currentUserId)) {
-          const updated = [...prev];
-          updated[tempIndex] = {
-            id: data._id,
-            text: data.message,
-            self: true,
-            time: new Date(data.createdAt).toLocaleTimeString(),
-            isRead: data.isRead,
-          };
-          return updated;
-        }
-        return [
-          ...prev,
-          {
-            id: data._id,
-            text: data.message,
-            self: false,
-            time: new Date(data.createdAt).toLocaleTimeString(),
-            isRead: data.isRead,
-          },
-        ];
-      });
-    };
+    const onTyping = ({ from, isTyping }) => {
+      if (from === friendId) setOtherTyping(isTyping)
+    }
 
-    const onMessagesRead = ({ by }) => {
-      if (String(by) !== String(friendId)) return;
-
-      setMessages((prev) =>
-        prev.map((m) => (m.self ? { ...m, isRead: true } : m))
-      );
-    };
-
-    const onUserOnline = ({ userId }) => {
-      if (String(userId) === String(friendId)) setIsOnline(true);
-    };
-
-    const onUserOffline = ({ userId }) => {
-      if (String(userId) === String(friendId)) setIsOnline(false);
-    };
-
-    socket.on("receive-message", onReceiveMessage);
-    socket.on("messages:read", onMessagesRead);
-    socket.on("user-online", onUserOnline);
-    socket.on("user-offline", onUserOffline);
+    socket.on("chat:receive-message", onMessage)
+    socket.on("chat:read-status", onReadStatus)
+    socket.on("user:status", onUserStatus)
+    socket.on("chat:typing", onTyping)
 
     return () => {
-      socket.off("receive-message", onReceiveMessage);
-      socket.off("messages:read", onMessagesRead);
-      socket.off("user-online", onUserOnline);
-      socket.off("user-offline", onUserOffline);
-    };
-  }, [friendId, currentUserId, socket.connected]);
+      socket.emit("chat:leave", { friendId })
+      socket.off("chat:receive-message", onMessage)
+      socket.off("chat:read-status", onReadStatus)
+      socket.off("user:status", onUserStatus)
+      socket.off("chat:typing", onTyping)
+    }
+  }, [friendId, user._id])
 
   useEffect(() => {
-    if (!currentUserId) return;
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages, otherTyping])
 
-    const onAnswered = async ({ from, answer }) => {
-      if (String(from) !== String(friendId)) return;
-      if (!peerRef.current) return;
-      await peerRef.current.setRemoteDescription(
-        new RTCSessionDescription(answer)
-      );
-      setInCall(true);
-    };
-
-    const onIce = async ({ from, candidate }) => {
-      if (String(from) !== String(friendId)) return;
-      await peerRef.current?.addIceCandidate(new RTCIceCandidate(candidate));
-    };
-
-    const onEnded = () => {
-      cleanupCall(false);
-    };
-
-    socket.on("call:answered", onAnswered);
-    socket.on("call:ice-candidate", onIce);
-    socket.on("call:ended", onEnded);
-
-    return () => {
-      socket.off("call:answered", onAnswered);
-      socket.off("call:ice-candidate", onIce);
-      socket.off("call:ended", onEnded);
-    };
-  }, [friendId, currentUserId]);
-
-  const createPeerConnection = (remoteUserId) => {
-    const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-    });
-
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit("call:ice-candidate", {
-          to: remoteUserId,
-          candidate: event.candidate,
-        });
-      }
-    };
-
-    pc.ontrack = (event) => {
-      if (!remoteVideoRef.current) return;
-
-      if (!remoteStreamRef.current) {
-        remoteStreamRef.current = new MediaStream();
-        remoteVideoRef.current.srcObject = remoteStreamRef.current;
-        remoteVideoRef.current.play().catch(() => { });
-      }
-
-      const alreadyAdded = remoteStreamRef.current
-        .getTracks()
-        .some((t) => t.id === event.track.id);
-
-      if (!alreadyAdded) {
-        remoteStreamRef.current.addTrack(event.track);
-      }
-
-      if (event.track.kind === "video") {
-        setHasRemote(true);
-      }
-    };
-
-    peerRef.current = pc;
-    return pc;
-  };
-
-  const startCall = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-
-      localStreamRef.current = stream;
-      setPendingStream(stream);
-      setInCall(true);
-    } catch (err) {
-      console.error("getUserMedia failed", err);
-      alert("Could not access camera/mic. Check permissions.");
+  const handleTyping = () => {
+    if (!isTyping) {
+      setIsTyping(true)
+      socket.emit("chat:typing", { to: friendId, isTyping: true })
     }
-  };
+    
+    if (window.typingTimeout) clearTimeout(window.typingTimeout);
+    
+    window.typingTimeout = setTimeout(() => {
+        setIsTyping(false)
+        socket.emit("chat:typing", { to: friendId, isTyping: false })
+    }, 3000)
+  }
 
-  useEffect(() => {
-    if (!inCall || !pendingStream || !friendId) return;
-    if (!localVideoRef.current) return;
-
-    const stream = pendingStream;
-    setPendingStream(null);
-
-    localVideoRef.current.srcObject = stream;
-    localVideoRef.current.play().catch(() => { });
-
-    const pc = createPeerConnection(friendId);
-    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
-    (async () => {
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      socket.emit("call:offer", { to: friendId, offer });
-    })();
-  }, [inCall, pendingStream, friendId]);
-
-  const acceptCall = async () => {
-    if (!incomingCall) return;
-    const { from, offer } = incomingCall;
-
-    let stream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-    } catch {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const sendMessage = (e) => {
+    e?.preventDefault()
+    if (!message.trim()) return
+    
+    const tempId = Date.now().toString()
+    const newMsg = {
+      id: tempId,
+      text: message,
+      self: true,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isRead: false
     }
 
-    localStreamRef.current = stream;
-
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = stream;
-      localVideoRef.current.play().catch(() => { });
-    }
-
-    const pc = createPeerConnection(from);
-    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
-    await pc.setRemoteDescription(new RTCSessionDescription(offer));
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    socket.emit("call:answer", { to: from, answer });
-
-    setIncomingCall(null);
-    setInCall(true);
-  };
-
-  const rejectCall = () => {
-    if (incomingCall) {
-      socket.emit("call:end", { to: incomingCall.from });
-    }
-    setIncomingCall(null);
-  };
-
-  useEffect(() => {
-    if (!autoAccept) return;
-    if (!incomingCall) return;
-    if (String(incomingCall.from) !== String(friendId)) return;
-    acceptCall();
-  }, [autoAccept, incomingCall, friendId]);
-
-  const cleanupCall = (emitEnd = true) => {
-    setInCall(false);
-    setHasRemote(false);
-
-    if (remoteStreamRef.current) {
-      remoteStreamRef.current.getTracks().forEach((t) => t.stop());
-      remoteStreamRef.current = null;
-    }
-    if (remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject = null;
-    }
-
-    if (peerRef.current) {
-      peerRef.current.ontrack = null;
-      peerRef.current.onicecandidate = null;
-      peerRef.current.close();
-      peerRef.current = null;
-    }
-
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
-      localStreamRef.current = null;
-    }
-
-    if (emitEnd) {
-      socket.emit("call:end", { to: friendId });
-    }
-  };
-
-  const endCall = () => cleanupCall(true);
-
-  const sendMessage = () => {
-    if (!message.trim()) return;
-
-    const tempId = `tmp-${Date.now()}`;
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: tempId,
-        text: message.trim(),
-        self: true,
-        time: new Date().toLocaleTimeString(),
-        isRead: false,
-      },
-    ]);
-
-    socket.emit("send-message", {
-      receiver: friendId,
-      message: message.trim(),
-    });
-
-    setMessage("");
-  };
+    setMessages(prev => [...prev, newMsg])
+    socket.emit("chat:send-message", { receiver: friendId, message: message.trim() })
+    setMessage("")
+    setIsTyping(false)
+    socket.emit("chat:typing", { to: friendId, isTyping: false })
+  }
 
   return (
-    <>
-      <Navbar />
-      <Container fluid className="p-4" style={{ maxWidth: "1200px" }}>
-        <Card className="shadow-sm border-0 fade-in" style={{ height: "calc(100vh - 120px)" }}>
-          <Card.Header className="bg-white border-bottom p-3">
-            <div className="d-flex align-items-center justify-content-between">
-              <div className="d-flex align-items-center gap-3">
-                <Button
-                  variant="light"
-                  size="sm"
-                  onClick={() => navigate("/")}
-                  className="rounded-circle"
-                  style={{ width: "40px", height: "40px" }}
-                >
-                  <i className="bi bi-arrow-left"></i>
-                </Button>
+    <div className="flex flex-col h-screen bg-background">
+      {/* Header */}
+      <header className="bg-surface border-b border-slate-100 dark:border-slate-800 p-4 flex items-center justify-between shadow-sm z-10">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => navigate("/")}
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-500 transition-colors"
+          >
+            <i className="bi bi-arrow-left text-xl"></i>
+          </button>
+          
+          <div className="relative">
+            <div className="w-11 h-11 bg-primary rounded-2xl flex items-center justify-center text-white font-bold shadow-sm">
+              {friend?.username?.[0]?.toUpperCase()}
+            </div>
+            <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 border-2 border-white rounded-full ${isOnline ? 'bg-green-500' : 'bg-slate-300'}`} />
+          </div>
 
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                  style={{
-                    width: "45px",
-                    height: "45px",
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  }}
-                >
-                  {(friend?.username || friend?.email)?.[0]?.toUpperCase()}
-                </div>
-
-                <div>
-                  <h6 className="mb-0 fw-semibold">{friend?.username || friend?.email}</h6>
-                  <small className="text-muted">
-                    {isOnline ? (
-                      <>
-                        <Badge bg="success" pill className="me-1">
-                          •
-                        </Badge>
-                        Online
-                      </>
-                    ) : (
-                      <>
-                        <Badge bg="secondary" pill className="me-1">
-                          •
-                        </Badge>
-                        Offline
-                      </>
-                    )}
-                  </small>
-                </div>
-              </div>
-
-              {!inCall && canCall && (
-                <Button variant="primary" size="sm" onClick={startCall} className="d-flex align-items-center gap-2">
-                  <i className="bi bi-camera-video"></i>
-                  Video Call
-                </Button>
+          <div>
+            <h2 className="font-bold text-text-main leading-tight">{friend?.username}</h2>
+            <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              {otherTyping ? (
+                <span className="text-primary animate-pulse italic">typing...</span>
+              ) : (
+                <>
+                   <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-500' : 'bg-slate-300'}`}></span>
+                   {isOnline ? 'Online now' : 'Offline'}
+                </>
               )}
-            </div>
-          </Card.Header>
+            </p>
+          </div>
+        </div>
 
-          <Modal show={!!incomingCall && !inCall} centered>
-            <Modal.Header>
-              <Modal.Title>Incoming Video Call</Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="text-center py-4">
-              <div
-                className="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold mb-3"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                }}
-              >
-                {(friend?.username || friend?.email)?.[0]?.toUpperCase()}
-              </div>
-              <h5 className="fw-semibold">{friend?.username || friend?.email}</h5>
-              <p className="text-muted">is calling you...</p>
-            </Modal.Body>
-            <Modal.Footer className="justify-content-center gap-3">
-              <Button variant="danger" onClick={rejectCall} size="lg">
-                <i className="bi bi-telephone-x me-2"></i>
-                Decline
-              </Button>
-              <Button variant="success" onClick={acceptCall} size="lg">
-                <i className="bi bi-telephone me-2"></i>
-                Accept
-              </Button>
-            </Modal.Footer>
-          </Modal>
+        <div className="flex items-center gap-1">
+          <button className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-primary transition-colors">
+            <i className="bi bi-camera-video fs-5"></i>
+          </button>
+          <button className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-primary transition-colors">
+            <i className="bi bi-telephone fs-5"></i>
+          </button>
+          <button className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-primary transition-colors">
+            <i className="bi bi-three-dots-vertical fs-5"></i>
+          </button>
+        </div>
+      </header>
 
-          {inCall && (
-            <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark" style={{ zIndex: 1000 }}>
-              <div className="position-relative w-100 h-100">
-                <video
-                  ref={hasRemote ? remoteVideoRef : localVideoRef}
-                  autoPlay
-                  playsInline
-                  muted={!hasRemote}
-                  className="w-100 h-100"
-                  style={{ objectFit: "cover" }}
-                />
-                {hasRemote && (
-                  <video
-                    ref={localVideoRef}
-                    autoPlay
-                    muted
-                    playsInline
-                    className="position-absolute shadow-lg rounded"
-                    style={{
-                      top: "20px",
-                      right: "20px",
-                      width: "200px",
-                      height: "150px",
-                      objectFit: "cover",
-                    }}
-                  />
-                )}
-                <div
-                  className="position-absolute start-50 translate-middle-x d-flex gap-3 align-items-center p-3 rounded-pill"
-                  style={{
-                    bottom: "30px",
-                    background: "rgba(0,0,0,0.7)",
-                  }}
-                >
-                  <Dropdown>
-                    <Dropdown.Toggle variant="light" size="sm">
-                      <i className="bi bi-speaker"></i>
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      {speakers.map((s) => (
-                        <Dropdown.Item
-                          key={s.deviceId}
-                          onClick={() => changeSpeaker(s.deviceId)}
-                          active={s.deviceId === speakerId}
-                        >
-                          {s.label || "Speaker"}
-                        </Dropdown.Item>
-                      ))}
-                    </Dropdown.Menu>
-                  </Dropdown>
+      {/* Messages */}
+      <div className="flex-grow overflow-y-auto p-4 space-y-6 scrollbar-hide">
+        <div className="text-center my-4">
+          <span className="px-4 py-1.5 bg-surface border border-slate-100 dark:border-slate-800 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest shadow-sm">Today</span>
+        </div>
 
-                  <Button
-                    variant={micOn ? "light" : "danger"}
-                    onClick={toggleMic}
-                    className="rounded-circle"
-                    style={{ width: "45px", height: "45px" }}
-                  >
-                    <i className={`bi bi-mic${micOn ? "" : "-mute"}`}></i>
-                  </Button>
-
-                  <Button
-                    variant="danger"
-                    onClick={endCall}
-                    className="rounded-circle"
-                    style={{ width: "45px", height: "45px" }}
-                  >
-                    <i className="bi bi-telephone-x"></i>
-                  </Button>
+        {messages.map((m) => (
+          <div key={m.id} className={`flex ${m.self ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+            <div className={`max-w-[75%] group`}>
+              <div className={`px-4 py-3 shadow-sm ${
+                m.self 
+                ? "bg-primary text-white rounded-[24px] rounded-br-none" 
+                : "bg-surface text-text-main border border-slate-50 dark:border-slate-800 rounded-[24px] rounded-bl-none"
+              }`}>
+                <p className="text-[15px] leading-relaxed">{m.text}</p>
+                <div className={`flex items-center gap-1 mt-1.5 ${m.self ? "justify-end" : "justify-start"}`}>
+                  <span className={`text-[10px] font-medium tracking-tighter ${m.self ? "text-white/60" : "text-slate-400"}`}>
+                    {m.time}
+                  </span>
+                  {m.self && (
+                    <i className={`bi bi-check2-all text-[14px] ${m.isRead ? "text-indigo-200" : "text-white/40"}`} />
+                  )}
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        ))}
+        {otherTyping && (
+          <div className="flex justify-start">
+             <div className="bg-surface border border-slate-50 dark:border-slate-800 px-4 py-3 rounded-[24px] rounded-bl-none shadow-sm flex gap-1">
+                <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce"></div>
+                <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce delay-75"></div>
+                <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce delay-150"></div>
+             </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
 
-          <Card.Body className="d-flex flex-column p-0" style={{ height: "calc(100% - 140px)" }}>
-            <div className="flex-grow-1 overflow-auto p-4" style={{ background: "#f8f9fa" }}>
-              {messages.map((m) => (
-                <div key={m.id} className={`d-flex mb-3 ${m.self ? "justify-content-end" : "justify-content-start"}`}>
-                  <div
-                    className={`px-3 py-2 rounded-3 shadow-sm ${m.self ? "text-white" : "bg-white text-dark"}`}
-                    style={{
-                      maxWidth: "70%",
-                      background: m.self ? "#609672ff" : "#ffffff",
-                    }}
-                  >
-                    <p className="mb-1">{m.text}</p>
-                    <small className={m.self ? "text-white-50" : "text-muted"} style={{ fontSize: "0.7rem" }}>
-                      {m.time}
-                    </small>
-                    {m.self && (
-                      <i
-                        className={`bi bi-check2-all ms-1 ${m.isRead ? "text-info" : "text-white-50"}`}
-                        style={{ fontSize: "0.9rem" }}
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-            <div className="p-3 border-top bg-white">
-              <Form.Group className="d-flex gap-2">
-                <Form.Control
-                  type="text"
-                  placeholder="Type a message..."
-                  value={message}
-                  onChange={(e) => {
-                    setMessage(e.target.value);
-                    handleTyping();
-                  }}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                  size="lg"
-                />
-                <Button variant="primary" onClick={sendMessage} size="lg" className="px-4">
-                  <i className="bi bi-send-fill"></i>
-                </Button>
-              </Form.Group>
-            </div>
-          </Card.Body>
-        </Card>
-      </Container>
-    </>
+      {/* Input */}
+      <div className="p-4 bg-surface border-t border-slate-100 dark:border-slate-800">
+        <form onSubmit={sendMessage} className="flex items-center gap-3">
+          <button type="button" className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-primary transition-colors">
+            <i className="bi bi-mic text-xl"></i>
+          </button>
+          <div className="flex-grow relative">
+            <input
+              type="text"
+              placeholder="Type a message..."
+              value={message}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                handleTyping();
+              }}
+              className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[24px] focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all pr-12 dark:text-white"
+            />
+            <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary">
+              <i className="bi bi-paperclip text-xl"></i>
+            </button>
+          </div>
+          <button 
+            type="submit"
+            className="w-11 h-11 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 transition-all"
+          >
+            <i className="bi bi-send-fill"></i>
+          </button>
+        </form>
+      </div>
+    </div>
   )
 }

@@ -55,7 +55,7 @@ export const getUserById = async (req, res) => {
 
 
 export const searchUser = async (req, res) => {
-  const { query } = req.query;
+  const { q: query } = req.query;
   const currentUserId = req.user.id;
 
   try {
@@ -70,8 +70,8 @@ export const searchUser = async (req, res) => {
     const candidate = await User.findOne({
       _id: { $ne: currentUserId },
       $or: [
-        { username: { $regex: `^${query}$`, $options: "i" } },
-        { email: { $regex: `^${query}$`, $options: "i" } },
+        { username: { $regex: query, $options: "i" } },
+        { email: { $regex: query, $options: "i" } },
       ],
     }).select("-password");
 
@@ -93,7 +93,7 @@ export const searchUser = async (req, res) => {
     const isFriend = currentUser.friends.includes(candidate._id);
 
     if (isFriend) {
-      return res.json({ user: candidate, status: "friends" });
+      return res.json({ ...candidate.toObject(), status: "friends" });
     }
 
     const sentRequest = await FriendRequest.findOne({
@@ -103,7 +103,7 @@ export const searchUser = async (req, res) => {
     });
 
     if (sentRequest) {
-      return res.json({ user: candidate, status: "request_sent" });
+      return res.json({ ...candidate.toObject(), status: "request_sent" });
     }
 
     const receivedRequest = await FriendRequest.findOne({
@@ -113,10 +113,10 @@ export const searchUser = async (req, res) => {
     });
 
     if (receivedRequest) {
-      return res.json({ user: candidate, status: "request_received" });
+      return res.json({ ...candidate.toObject(), status: "request_received" });
     }
 
-    return res.json({ user: candidate, status: "none" });
+    return res.json({ ...candidate.toObject(), status: "none" });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

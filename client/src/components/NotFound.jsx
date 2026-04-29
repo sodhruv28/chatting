@@ -1,40 +1,36 @@
 import { useNavigate } from "react-router-dom"
-import { Container, Card, Button } from "react-bootstrap"
 
 export default function NotFound() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center">
-      <Container>
-        <Card className="text-center shadow-lg border-0 p-5 fade-in" style={{ maxWidth: "500px", margin: "0 auto" }}>
-          <Card.Body>
-            <div
-              className="display-1 fw-bold mb-3"
-              style={{
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              404
-            </div>
-            <h2 className="fw-bold mb-3">Page Not Found</h2>
-            <p className="text-muted mb-4">The page you are looking for doesn't exist or may have been moved.</p>
+    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fe] p-6 text-center">
+      <div className="w-full max-w-md bg-white rounded-[40px] shadow-sm border border-slate-100 p-12 animate-in zoom-in duration-500">
+        <div className="text-8xl font-black text-primary mb-6 tracking-tighter opacity-20">
+          404
+        </div>
+        <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Lost in the Clouds?</h2>
+        <p className="text-slate-500 mb-10 leading-relaxed font-medium">
+          The page you're looking for has floated away or never existed. Let's get you back to safety.
+        </p>
 
-            <div className="d-flex gap-3 justify-content-center">
-              <Button variant="primary" size="lg" onClick={() => navigate("/")}>
-                <i className="bi bi-house me-2"></i>
-                Go Home
-              </Button>
-              <Button variant="outline-secondary" size="lg" onClick={() => navigate(-1)}>
-                <i className="bi bi-arrow-left me-2"></i>
-                Go Back
-              </Button>
-            </div>
-          </Card.Body>
-        </Card>
-      </Container>
+        <div className="flex flex-col gap-3">
+          <button 
+            onClick={() => navigate("/")}
+            className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/20 hover:bg-indigo-700 transition-all active:scale-95"
+          >
+            <i className="bi bi-house-fill mr-2"></i>
+            Take Me Home
+          </button>
+          <button 
+            onClick={() => navigate(-1)}
+            className="w-full py-4 bg-slate-50 text-slate-600 font-bold rounded-2xl border border-slate-100 hover:bg-slate-100 transition-all"
+          >
+            <i className="bi bi-arrow-left mr-2"></i>
+            Go Back
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

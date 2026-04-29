@@ -1,92 +1,63 @@
 import { useState, useEffect } from "react"
-import axios from "axios"
-import { useNavigate } from "react-router-dom"
-import socket from "../socket"
-import { Navbar, Container, Nav, Button } from "react-bootstrap"
+import api from "../api/axios"
+import { useNavigate, Link } from "react-router-dom"
+import { disconnectSocket } from "../socket"
 
-export default function AppNavbar() {
+export default function Navbar() {
   const [me, setMe] = useState(null)
-  const jwt = localStorage.getItem("jwt")
-  const currentUserId = localStorage.getItem("userId")
+  const token = localStorage.getItem("token")
+  const user = JSON.parse(localStorage.getItem("user") || "{}")
+  const currentUserId = user._id;
   const navigate = useNavigate()
 
-  const authHeader = {
-    headers: { Authorization: `Bearer ${jwt}` },
-  }
-
   useEffect(() => {
-    if (!jwt || !currentUserId) return
-
+    if (!token || !currentUserId) return
     const loadMe = async () => {
-      const res = await axios.get(`http://localhost:5000/api/users/${currentUserId}`, authHeader)
-      setMe(res.data)
+      try {
+        const res = await api.get(`/users/${currentUserId}`)
+        setMe(res.data)
+      } catch (err) {
+        console.error("Failed to load user info:", err);
+      }
     }
-    loadMe().catch(console.error)
-  }, [jwt, currentUserId])
+    loadMe()
+  }, [token, currentUserId])
 
   const logout = () => {
-    localStorage.removeItem("jwt")
-    localStorage.removeItem("userId")
-    localStorage.removeItem("userEmail")
-    socket.disconnect()
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    disconnectSocket()
     navigate("/login")
   }
 
   return (
-    <Navbar bg="white" expand="lg" className="shadow-sm border-bottom">
-      <Container fluid>
-        <Navbar.Brand
-          onClick={() => navigate("/")}
-          style={{ cursor: "pointer" }}
-          className="fw-bold d-flex align-items-center gap-2"
-        >
-          <div
-            className="d-flex align-items-center justify-content-center rounded-circle text-white"
-            style={{
-              width: "40px",
-              height: "40px",
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
-          >
-            <i className="bi bi-chat-dots-fill"></i>
-          </div>
-          <span style={{ color: "#4f46e5" }}>ChatApp</span>
-        </Navbar.Brand>
-
-        <Navbar.Toggle aria-controls="navbar-nav" />
-
-        <Navbar.Collapse id="navbar-nav">
-          <Nav className="ms-auto align-items-center gap-3">
-            {me && (
-
-              <a href="/me">
-                <div className="d-flex align-items-center gap-2 px-3 py-2 rounded-pill border">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                  style={{
-                    width: "35px",
-                    height: "35px",
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  }}
-                >
-                  {(me.username || me.email)[0].toUpperCase()}
-                </div>
-                <div>
-                  <div className="fw-semibold small">{me.username || "User"}</div>
-                  <div className="text-muted" style={{ fontSize: "0.7rem", maxWidth: "150px" }}>
-                    {me.email}
-                  </div>
-                </div>
+    <nav className="sticky top-0 z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 py-4">
+      <div className="container mx-auto px-4 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          {me && (
+            <Link to="/me" className="group">
+              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold shadow-sm transition-transform group-active:scale-95">
+                {me.username[0].toUpperCase()}
               </div>
-              </a>
-            )}
-            <Button variant="outline-danger" size="sm" onClick={logout}>
-              <i className="bi bi-box-arrow-right me-2"></i>
-              Logout
-            </Button>
-          </Nav>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+            </Link>
+          )}
+        </div>
+        
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <Link to="/" className="text-xl font-black text-primary tracking-tighter">
+            INDIGO
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={logout}
+            className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+          >
+            <i className="bi bi-box-arrow-right text-2xl"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
   )
 }
