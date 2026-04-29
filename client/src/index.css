@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 @theme {
   --color-primary: #4352a5;
@@ -10,6 +10,7 @@
   --color-text-main: var(--text-color);
   --color-text-muted: var(--text-muted-color);
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Outfit', sans-serif;
 }
 
 /* Tailwind 4 Dark Mode Configuration */

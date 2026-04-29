@@ -171,7 +171,7 @@ export default function Home() {
                 {activeTab === "chats" && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex justify-between items-center mb-8">
-                            <h1 className="text-2xl font-semibold text-text-main tracking-tight">Messages</h1>
+                            <h1 className="text-2xl font-black font-display text-text-main tracking-tight">Messages</h1>
                             <button className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-primary transition-colors">
                                 <i className="bi bi-search text-xl"></i>
                             </button>
@@ -262,7 +262,7 @@ export default function Home() {
                 {activeTab === "people" && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
                         <div className="flex justify-between items-center mb-8">
-                            <h1 className="text-3xl font-black text-text-main tracking-tight">People</h1>
+                            <h1 className="text-3xl font-black font-display text-text-main tracking-tight">People</h1>
                             <button className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-primary transition-colors">
                                 <i className="bi bi-person-plus text-xl"></i>
                             </button>
@@ -340,7 +340,7 @@ export default function Home() {
                         </div>
  
                         <div className="mt-14 pt-10 border-t border-[var(--border-color)]">
-                            <h3 className="text-2xl font-black text-text-main mb-6 tracking-tight">Find New People</h3>
+                            <h3 className="text-2xl font-black font-display text-text-main mb-6 tracking-tight">Find New People</h3>
                             <form onSubmit={handleSearch} className="flex gap-2 mb-8">
                                 <div className="relative flex-grow">
                                     <i className="bi bi-person absolute left-5 top-1/2 -translate-y-1/2 text-text-muted/60"></i>
@@ -390,7 +390,7 @@ export default function Home() {
                 {activeTab === "settings" && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
                         <div className="flex justify-between items-center mb-8">
-                            <h1 className="text-3xl font-black text-text-main tracking-tight">Settings</h1>
+                            <h1 className="text-3xl font-black font-display text-text-main tracking-tight">Settings</h1>
                         </div>
  
                         {/* Profile Section */}

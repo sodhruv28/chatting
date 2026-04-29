@@ -111,7 +111,7 @@ export default function Profile() {
                         <i className="bi bi-chevron-left"></i>
                     </button>
                     <div>
-                        <h1 className="text-2xl font-black text-text-main tracking-tight">Edit Profile</h1>
+                        <h1 className="text-2xl font-black font-display text-text-main tracking-tight">Edit Profile</h1>
                         <p className="text-[13px] text-text-muted font-medium">Update your public identity</p>
                     </div>
                 </div>

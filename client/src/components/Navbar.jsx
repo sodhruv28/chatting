@@ -44,9 +44,17 @@ export default function Navbar() {
         </div>
         
         <div className="absolute left-1/2 -translate-x-1/2">
-          <Link to="/" className="text-xl font-bold text-text-main tracking-tight flex items-center gap-1">
-            <span>Indigo</span>
-            <span className="text-primary font-normal">Connect</span>
+          <Link to="/" className="flex items-center gap-2 group transition-all">
+            <div className="w-9 h-9 bg-gradient-to-br from-primary to-indigo-600 rounded-[12px] flex items-center justify-center shadow-lg shadow-primary/20 group-hover:rotate-6 transition-all duration-300">
+              <span className="text-white font-black text-xl italic tracking-tighter">I</span>
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1 leading-none">
+                <span className="text-lg font-black text-text-main tracking-tight">Indigo</span>
+                <span className="text-lg font-bold text-primary tracking-tight">Connect</span>
+              </div>
+              <span className="text-[9px] font-bold text-text-muted uppercase tracking-[0.2em] mt-0.5 opacity-60">Messenger</span>
+            </div>
           </Link>
         </div>
 
