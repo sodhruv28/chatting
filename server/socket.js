@@ -17,13 +17,7 @@ export function initSocket(server) {
 
   const io = new Server(server, {
     cors: {
-      origin: (origin, callback) => {
-        if (!origin || origin.startsWith("http://localhost:") || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(null, false);
-        }
-      },
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
       credentials: true
     },
@@ -124,7 +118,7 @@ export function initSocket(server) {
           isRead: chat.isRead,
         };
 
-        io.to(room).emit("chat:receive-message", payload);
+        io.to(receiverId).emit("chat:receive-message", payload);
         io.to(receiverId).emit("chat:notification", payload);
 
       } catch (err) {

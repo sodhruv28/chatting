@@ -43,7 +43,7 @@ export default function Chat() {
     socket.emit("chat:read-all", { friendId })
 
     const onMessage = (msg) => {
-      if (msg.sender === friendId) {
+      if (String(msg.sender) === String(friendId)) {
         setMessages(prev => [...prev, {
           id: msg._id,
           text: msg.message,
