@@ -22,7 +22,7 @@ export default function Chat() {
       try {
         const [fRes, mRes] = await Promise.all([
           api.get(`/users/${friendId}`),
-          api.get(`/messages/${friendId}`)
+          api.get(`/chats/history/${friendId}`)
         ])
         setFriend(fRes.data)
         setMessages(mRes.data.map(m => ({
