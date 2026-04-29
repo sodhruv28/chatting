@@ -19,7 +19,6 @@ pnpm-debug.log*
 ############################
 # Firebase / Secrets
 ############################
-firebase.js
 firebaseServiceKey.json
 firebaseServiceKey*.json
 serviceAccountKey.json
