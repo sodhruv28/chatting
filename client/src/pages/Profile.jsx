@@ -6,10 +6,10 @@ import {
     deleteUser
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function Profile() {
     const token = localStorage.getItem("token");
-    const userLocal = JSON.parse(localStorage.getItem("user") || "{}");
     const navigate = useNavigate();
 
     const [blocked, setBlocked] = useState([]);
@@ -57,10 +57,12 @@ export default function Profile() {
         setError("");
         try {
             await api.patch("/users/me", { username: form.username });
-            alert("Profile updated successfully");
+            toast.success("Profile updated successfully");
             loadAll();
         } catch (err) {
-            setError(err.response?.data?.message || "Failed to update profile");
+            const msg = err.response?.data?.message || "Failed to update profile";
+            toast.error(msg);
+            setError(msg);
         } finally {
             setSaving(false);
         }
@@ -74,139 +76,152 @@ export default function Profile() {
             await api.delete("/users/me");
             await deleteUser(firebaseUser);
             localStorage.clear();
+            toast.success("Your account has been permanently deleted.");
             navigate("/login");
         } catch {
-            alert("Failed to delete account. You might need to re-login first.");
+            toast.error("Security check: Please re-login before deleting your account.");
         }
     };
 
     const handleUnblock = async (userId) => {
         try {
             await api.delete(`/users/block/${userId}`);
+            toast.success("User unblocked");
             loadAll();
         } catch {
-            alert("Failed to unblock user");
+            toast.error("Failed to unblock user");
         }
     };
 
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-[#f8f9fe]">
+        <div className="min-h-screen flex items-center justify-center bg-background">
             <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-[#f8f9fe]">
+        <div className="min-h-screen bg-background">
             <Navbar />
-            <main className="container mx-auto px-4 py-10 max-w-4xl">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Account Settings</h1>
-                    <p className="text-slate-500 font-medium">Manage your profile and privacy</p>
+            <main className="container mx-auto px-4 py-8 pb-32 max-w-2xl">
+                <div className="flex items-center gap-4 mb-10">
+                    <button 
+                        onClick={() => navigate(-1)}
+                        className="w-10 h-10 flex items-center justify-center bg-surface border border-[var(--border-color)] text-text-main rounded-2xl hover:bg-[#efedf5] dark:hover:bg-[#303036] transition-all"
+                    >
+                        <i className="bi bi-chevron-left"></i>
+                    </button>
+                    <div>
+                        <h1 className="text-2xl font-black text-text-main tracking-tight">Edit Profile</h1>
+                        <p className="text-[13px] text-text-muted font-medium">Update your public identity</p>
+                    </div>
                 </div>
 
-                <div className="grid gap-8">
+                <div className="space-y-8">
                     {/* Profile Card */}
-                    <section className="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8">
-                        <h2 className="text-xl font-bold text-slate-900 mb-6">Personal Information</h2>
-                        {error && <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-sm border border-red-100">{error}</div>}
+                    <section className="bg-surface rounded-[32px] shadow-[var(--card-shadow)] border border-[var(--border-color)] p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex flex-col items-center mb-8">
+                            <div className="w-24 h-24 bg-primary/10 text-primary text-4xl font-black rounded-[32px] flex items-center justify-center border-2 border-primary/20 mb-4">
+                                {form.username?.[0]?.toUpperCase()}
+                            </div>
+                            <h2 className="text-lg font-bold text-text-main">Your Avatar</h2>
+                            <p className="text-[11px] text-text-muted font-medium">Generated from your username</p>
+                        </div>
+
+                        {error && <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-2xl text-[13px] font-bold border border-red-100 dark:border-red-900/20 flex items-center gap-2">
+                            <i className="bi bi-exclamation-circle"></i>
+                            {error}
+                        </div>}
                         
                         <form onSubmit={handleUpdate} className="space-y-6">
-                            <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
                                 <div>
-                                    <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2 ms-2">Username</label>
+                                    <label className="block text-[11px] font-black text-text-muted mb-2 ml-1 uppercase tracking-widest">Username</label>
                                     <input
                                         type="text"
                                         value={form.username}
                                         onChange={(e) => setForm({ ...form, username: e.target.value })}
-                                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium"
+                                        className="w-full px-5 py-4 bg-[#efedf5] dark:bg-[#303036] border-2 border-transparent focus:border-primary/20 rounded-2xl outline-none transition-all text-text-main font-bold"
+                                        placeholder="Choose a cool username"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2 ms-2">Email address</label>
+                                    <label className="block text-[11px] font-black text-text-muted mb-2 ml-1 uppercase tracking-widest">Email address</label>
                                     <input
                                         type="email"
                                         value={form.email}
                                         disabled
-                                        className="w-full px-5 py-4 bg-slate-100 border border-slate-200 rounded-2xl text-slate-400 cursor-not-allowed font-medium"
+                                        className="w-full px-5 py-4 bg-[#efedf5]/30 dark:bg-[#303036]/30 border-none rounded-2xl text-text-muted/50 cursor-not-allowed font-medium"
                                     />
-                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter ms-2 mt-1 block">Email cannot be changed</span>
+                                    <span className="text-[10px] text-text-muted font-bold ml-1 mt-2 block opacity-60">Verified email cannot be changed</span>
                                 </div>
                             </div>
                             <button 
                                 type="submit" 
                                 disabled={saving}
-                                className="px-8 py-4 bg-primary text-white font-bold rounded-2xl hover:bg-indigo-700 shadow-lg shadow-primary/20 transition-all disabled:opacity-50"
+                                className="w-full py-4 bg-primary text-white font-black rounded-2xl hover:bg-primary/90 shadow-xl shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50"
                             >
-                                {saving ? "Saving Changes..." : "Save Changes"}
+                                {saving ? "Saving Changes..." : "Update Profile"}
                             </button>
                         </form>
                     </section>
 
-                    <div className="grid md:grid-cols-2 gap-8">
+                    <div className="grid gap-8">
                         {/* Blocked Users */}
-                        <section className="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8">
-                            <h2 className="text-xl font-bold text-slate-900 mb-6">Privacy</h2>
-                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Blocked Users</h3>
+                        <section className="bg-surface rounded-[32px] shadow-[var(--card-shadow)] border border-[var(--border-color)] p-8">
+                            <h2 className="text-lg font-bold text-text-main mb-6">Privacy</h2>
+                            <h3 className="text-[13px] font-bold text-text-muted mb-4 uppercase tracking-wider">Blocked Users</h3>
                             
                             <div className="space-y-3">
-                                {blocked.length === 0 ? (
-                                    <p className="text-slate-400 text-sm font-medium py-4">No users are currently blocked.</p>
-                                ) : (
-                                    blocked.map(u => (
-                                        <div key={u._id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                            <span className="font-bold text-slate-700">{u.username}</span>
-                                            <button 
-                                                onClick={() => handleUnblock(u._id)}
-                                                className="px-4 py-2 text-xs font-bold text-primary hover:bg-indigo-50 rounded-xl transition-all"
-                                            >
-                                                Unblock
-                                            </button>
-                                        </div>
-                                    ))
-                                )}
+                                {blocked.map(u => (
+                                    <div key={u._id} className="flex items-center justify-between p-4 bg-[#efedf5] dark:bg-[#303036] rounded-2xl">
+                                        <span className="font-semibold text-text-main">{u.username}</span>
+                                        <button 
+                                            onClick={() => handleUnblock(u._id)}
+                                            className="text-[13px] font-bold text-primary hover:underline"
+                                        >
+                                            Unblock
+                                        </button>
+                                    </div>
+                                ))}
+                                {blocked.length === 0 && <p className="text-text-muted text-[13px] font-medium italic">No users blocked</p>}
                             </div>
                         </section>
 
                         {/* Danger Zone */}
-                        <section className="bg-white rounded-[32px] shadow-sm border border-red-100 p-8">
-                            <h2 className="text-xl font-bold text-red-600 mb-6">Danger Zone</h2>
-                            <p className="text-slate-500 text-sm mb-6">Once you delete your account, there is no going back. Please be certain.</p>
-                            <button 
-                                onClick={() => setShowDeleteModal(true)}
-                                className="w-full py-4 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 hover:bg-red-600 hover:text-white transition-all shadow-sm"
-                            >
-                                Delete My Account
-                            </button>
+                        <section className="bg-surface rounded-[32px] shadow-[var(--card-shadow)] border border-red-100 dark:border-red-900/20 p-8">
+                            <h2 className="text-lg font-bold text-red-600 dark:text-red-400 mb-2">Danger Zone</h2>
+                            <p className="text-[13px] text-text-muted font-medium mb-6">Once you delete your account, there is no going back. Please be certain.</p>
+                            
+                            {!showDeleteModal ? (
+                                <button 
+                                    onClick={() => setShowDeleteModal(true)}
+                                    className="px-8 py-4 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 font-bold rounded-2xl hover:bg-red-100 dark:hover:bg-red-900/20 transition-all"
+                                >
+                                    Delete My Account
+                                </button>
+                            ) : (
+                                <div className="flex flex-col gap-4 p-6 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20 animate-in zoom-in duration-300">
+                                    <p className="text-sm font-bold text-red-600 dark:text-red-400">Are you absolutely sure?</p>
+                                    <div className="flex gap-3">
+                                        <button 
+                                            onClick={deleteAccount}
+                                            className="px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all"
+                                        >
+                                            Yes, Delete
+                                        </button>
+                                        <button 
+                                            onClick={() => setShowDeleteModal(false)}
+                                            className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-all"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </section>
                     </div>
                 </div>
             </main>
-
-            {/* Delete Modal */}
-            {showDeleteModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl p-8 animate-in zoom-in-95 duration-300">
-                        <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">Delete Account?</h3>
-                        <p className="text-slate-500 mb-8 leading-relaxed">
-                            Are you absolutely sure? All your messages, contacts, and personal data will be <span className="text-red-600 font-bold">permanently erased</span>.
-                        </p>
-                        <div className="flex flex-col gap-3">
-                            <button 
-                                onClick={deleteAccount}
-                                className="w-full py-4 bg-red-600 text-white font-bold rounded-2xl shadow-lg shadow-red-600/20 hover:bg-red-700 transition-all"
-                            >
-                                Yes, Delete Permanently
-                            </button>
-                            <button 
-                                onClick={() => setShowDeleteModal(false)}
-                                className="w-full py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-all"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

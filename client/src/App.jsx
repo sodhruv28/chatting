@@ -9,6 +9,8 @@ import Chat from "./pages/Chat.jsx"
 import Me from "./pages/Profile.jsx"
 import ProtectedRoute from "./components/ProtectedRoute.jsx"
 
+import { Toaster } from "sonner"
+
 const App = () => {
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -27,6 +29,7 @@ const App = () => {
 
   return (
     <BrowserRouter>
+      <Toaster position="top-center" richColors />
       <Routes>
         <Route path="/login" element={<UserLogin />} />
         <Route path="/register" element={<UserReg />} />

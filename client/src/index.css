@@ -2,8 +2,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 @theme {
-  --color-primary: #5C6BC0;
-  --color-secondary: #FF6B6B;
+  --color-primary: #4352a5;
+  --color-secondary: #ae2f34;
+  --color-accent: #775200;
   --color-background: var(--bg-color);
   --color-surface: var(--surface-color);
   --color-text-main: var(--text-color);
@@ -15,19 +16,21 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --bg-color: #f8f9fe;
+  --bg-color: #fbf8ff;
   --surface-color: #ffffff;
-  --text-color: #0f172a;
-  --text-muted-color: #64748b;
-  --border-color: #f1f5f9;
+  --text-color: #1b1b21;
+  --text-muted-color: #454651;
+  --border-color: #e3e1e9;
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .dark {
-  --bg-color: #0f172a;
-  --surface-color: #1e293b;
-  --text-color: #f8f9fe;
-  --text-muted-color: #94a3b8;
-  --border-color: #334155;
+  --bg-color: #1b1b21;
+  --surface-color: #24252e;
+  --text-color: #fbf8ff;
+  --text-muted-color: #c6c5d3;
+  --border-color: #303036;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 @layer base {
@@ -38,31 +41,31 @@
 
 @layer components {
   .card-custom {
-    @apply bg-surface border border-[var(--border-color)] rounded-[32px] shadow-sm;
+    @apply bg-surface border border-[var(--border-color)] rounded-[24px] shadow-[var(--card-shadow)];
   }
 
   .message-bubble {
-    @apply max-w-[75%] px-4 py-3 text-[15px] leading-relaxed shadow-sm;
+    @apply max-w-[75%] px-5 py-3.5 text-[15px] leading-relaxed;
   }
   
   .message-sent {
-    @apply bg-primary text-white rounded-2xl rounded-br-none self-end;
+    @apply bg-primary text-white rounded-[20px] rounded-br-[4px] self-end;
   }
   
   .message-received {
-    @apply bg-slate-100 dark:bg-slate-800 text-text-main rounded-2xl rounded-bl-none self-start;
+    @apply bg-[#efedf5] dark:bg-[#303036] text-text-main rounded-[20px] rounded-bl-[4px] self-start;
   }
 
   .nav-item-custom {
-    @apply flex flex-col items-center text-slate-400 no-underline text-[11px] gap-1 cursor-pointer transition-colors;
+    @apply flex flex-col items-center text-text-muted no-underline text-[12px] font-medium gap-1 cursor-pointer transition-all;
   }
 
   .nav-item-custom.active {
-    @apply text-primary;
+    @apply text-primary scale-110;
   }
 
   .chat-item {
-    @apply flex items-center gap-3 p-3 rounded-xl transition-colors cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50;
+    @apply flex items-center gap-4 p-4 rounded-2xl transition-all cursor-pointer hover:bg-[#efedf5] dark:hover:bg-[#303036];
   }
 }
 

@@ -4,6 +4,7 @@ import api from "../api/axios"
 import { auth } from "../firebase"
 import { connectSocket } from "../socket";
 import { useNavigate, Link } from "react-router-dom"
+import { toast } from "sonner"
 
 export default function Login() {
   const [email, setEmail] = useState("")
@@ -28,10 +29,12 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(res.data.user));
       
       connectSocket(res.data.token);
+      toast.success("Welcome back! You've successfully logged in.");
       navigate("/");
     } catch (err) {
       console.error("Login error:", err);
-      let msg = "Failed to login";
+      let msg = "Failed to login. Please try again.";
+      
       if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
         msg = "Invalid email or password. Please try again.";
       } else if (err.code === "auth/too-many-requests") {
@@ -39,6 +42,8 @@ export default function Login() {
       } else if (err.response?.data?.message) {
         msg = err.response.data.message;
       }
+      
+      toast.error(msg);
       setError(msg);
     } finally {
       setLoading(false);
@@ -46,59 +51,61 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 transition-colors duration-300">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 transition-colors duration-300">
+      <div className="w-full max-w-[400px]">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-primary rounded-2xl shadow-sm text-white mb-6">
-            <i className="bi bi-chat-left-quote-fill text-2xl"></i>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 text-primary rounded-3xl mb-6 border border-primary/20">
+            <i className="bi bi-chat-left-quote-fill text-3xl"></i>
           </div>
-          <h2 className="text-[28px] font-bold text-text-main tracking-tight mb-2">Welcome back</h2>
-          <p className="text-text-muted text-sm">Please enter your details to sign in.</p>
+          <h2 className="text-3xl font-bold text-text-main tracking-tight mb-2">Welcome back</h2>
+          <p className="text-text-muted font-medium">Enter your details to access your account.</p>
         </div>
 
-        <div className="bg-surface rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800 p-8">
+        <div className="bg-surface rounded-[32px] shadow-[var(--card-shadow)] border border-[var(--border-color)] p-8">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-bold rounded-2xl border border-red-100 dark:border-red-900/30 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-              <i className="bi bi-exclamation-circle"></i>
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 text-[13px] font-semibold rounded-2xl border border-red-100 dark:border-red-900/20 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+              <i className="bi bi-exclamation-circle text-lg"></i>
               {error}
             </div>
           )}
           
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
+              <label className="block text-[13px] font-semibold text-text-muted mb-2 ml-1">Email address</label>
               <input
                 type="email"
-                placeholder="Email address"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-5 py-4 bg-background border border-slate-100 dark:border-slate-800 rounded-2xl focus:bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-text-main"
+                className="w-full px-5 py-4 bg-[#efedf5] dark:bg-[#303036] border-none rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none transition-all text-text-main placeholder:text-text-muted/40"
                 required
               />
             </div>
 
             <div>
+              <label className="block text-[13px] font-semibold text-text-muted mb-2 ml-1">Password</label>
               <input
                 type="password"
-                placeholder="Password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-5 py-4 bg-background border border-slate-100 dark:border-slate-800 rounded-2xl focus:bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-text-main"
+                className="w-full px-5 py-4 bg-[#efedf5] dark:bg-[#303036] border-none rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none transition-all text-text-main placeholder:text-text-muted/40"
                 required
               />
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-text-muted cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary bg-background" />
+            <div className="flex items-center justify-between text-[13px]">
+              <label className="flex items-center gap-2 text-text-muted cursor-pointer font-medium">
+                <input type="checkbox" className="w-4 h-4 rounded-lg border-[var(--border-color)] text-primary focus:ring-primary bg-[#efedf5] dark:bg-[#303036]" />
                 Remember me
               </label>
-              <a href="#" className="text-primary font-semibold hover:underline">Forgot password?</a>
+              <a href="#" className="text-primary font-bold hover:underline">Forgot password?</a>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/20 hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:opacity-70 disabled:pointer-events-none"
+              className="w-full py-4.5 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/25 hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-70 disabled:pointer-events-none mt-2"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div>
@@ -108,8 +115,8 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-sm text-slate-500">
+          <div className="mt-10 text-center">
+            <p className="text-[14px] text-text-muted font-medium">
               Don't have an account?{" "}
               <Link to="/register" className="text-primary font-bold hover:underline">
                 Create Account
