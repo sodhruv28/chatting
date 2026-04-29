@@ -5,23 +5,27 @@ const chatMessageSchema = new mongoose.Schema(
     sender: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
     receiver: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
+    },
+    chatId: {
+      type: String,
+      required: true,
     },
     message: {
       type: String,
-      required: true
+      required: true,
     },
     isRead: {
       type: Boolean,
-      default: false  
-    }
+      default: false,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("ChatMessage", chatMessageSchema);

@@ -74,21 +74,21 @@ Built using **React, Node.js, MongoDB, Socket.IO, Firebase Authentication, and W
 
 ## 📂 Project Structure
 
-chatting/
-│
-├── client/ # React frontend
-│ ├── src/
-│ ├── styles/
-│ └── socket.js
-│
-├── server/ # Node.js backend
-│ ├── controllers/
-│ ├── models/
-│ ├── routes/
-│ ├── socket.js
-│ └── server.js
-│
-└── README.md
+    chatting/
+    │
+    ├── client/ # React frontend
+    │ ├── src/
+    │ ├── styles/
+    │ └── socket.js
+    │
+    ├── server/ # Node.js backend
+    │ ├── controllers/
+    │ ├── models/
+    │ ├── routes/
+    │ ├── socket.js
+    │ └── server.js
+    │
+    └── README.md
 
 ---
 
@@ -105,87 +105,82 @@ chatting/
 ## 📦 Installation
 
 ### Clone the repository
-```bash
-git clone https://github.com/sodhruv28/chatting.git
-cd chatting
-Backend Setup
-bash
-Copy code
-cd server
-npm install
-Create .env inside server/:
+    git clone https://github.com/sodhruv28/chatting.git
+    cd chatting
 
-env
-Copy code
+### Backend Setup
+    cd server
+    npm install
+
+
+### Create .env inside server/:
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
-Run backend:
 
-bash
-Copy code
-npm run dev
-Frontend Setup
-bash
-Copy code
-cd client
-npm install
-Create .env inside client/:
+---
 
-env
-Copy code
-VITE_API_URL=http://localhost:5000
-Run frontend:
+### Run backend:
+    npm run dev
+### Frontend Setup
+    cd client
+    npm install
 
-bash
-Copy code
-npm run dev
-Open in browser:
+### Create .env inside client/:
 
-dts
-Copy code
-http://localhost:5173
-🧪 How to Use
-Register or login using email
+    VITE_API_URL=http://localhost:5000
+    
+### Run frontend:
+    npm run dev
+### Open in browser:
+    http://localhost:5173
+    
+---
 
-Search users and send friend requests
+### 🧪 How to Use
+- Register or login using email
 
-Accept request to start chatting
+- Search users and send friend requests
 
-Send messages in real time
+- Accept request to start chatting
 
-See online status & read receipts
+- Send messages in real time
 
-Start one-to-one video calls
+- See online status & read receipts
 
-📸 Screenshots (Add Yours)
-stylus
-Copy code
-docs/screenshots/
-├── home.png
-├── chat.png
-├── video-call.png
-Example:
+- Start one-to-one video calls
 
-![Chat Screen](docs/screenshots/chat.png)
-🧭 Roadmap
- Group chats
+---
 
- Message reactions & emojis
+### 📸 Screenshots (Add Yours)
 
- Media sharing (images/videos)
+    docs/screenshots/
+    ├── home.png
+    ├── chat.png
+    ├── video-call.png
+    Example:
+    
+    ![Chat Screen](docs/screenshots/chat.png)
 
- Push notifications
+--- 
+### 🧭 Roadmap
+ ##Group chats
 
- Mobile app (React Native)
+ - Message reactions & emojis
 
- End-to-end encryption
+ - Media sharing (images/videos)
 
-🤝 Contributing
+ - Push notifications
+
+- Mobile app (React Native)
+
+ - End-to-end encryption
+
+---
+
+### 🤝 Contributing
 Contributions are welcome!
 
-bash
-Copy code
 1. Fork the repository
 2. Create a feature branch
    git checkout -b feature/awesome-feature
@@ -196,12 +191,16 @@ Copy code
 📄 License
 This project is licensed under the MIT License.
 
-📬 Contact
+---
+
+### 📬 Contact
 Dhruv Solanki
 📧 Email: sodhruv28@gmail.com
 🐙 GitHub: https://github.com/sodhruv28
 
-⭐ If you like this project, give it a star on GitHub!
+---
+
+### ⭐ If you like this project, give it a star on GitHub!
 
 If you want, next I can:
 - Make this **resume-perfect**

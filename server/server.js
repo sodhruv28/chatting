@@ -1,4 +1,3 @@
-
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -13,10 +12,18 @@ import { initSocket } from "./socket.js";
 
 dotenv.config();
 
+if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
+  console.error(
+    "FATAL ERROR: MONGO_URI and JWT_SECRET must be defined in the .env file.",
+  );
+  process.exit(1);
+}
+
 const app = express();
 const server = http.createServer(app);
 
-app.use(cors({ origin: "http://localhost:5173" }));
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+app.use(cors({ origin: frontendUrl }));
 app.use(express.json());
 
 mongoose
@@ -29,8 +36,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/friends", friendRoutes);
 
-const io = initSocket(server);   
-app.set("io", io);               
+const io = initSocket(server);
+app.set("io", io);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

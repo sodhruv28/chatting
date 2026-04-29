@@ -7,8 +7,8 @@ export const getChats = async (req, res) => {
   const chats = await ChatMessage.find({
     $or: [
       { sender: req.user.id, receiver: friendId },
-      { sender: friendId, receiver: req.user.id }
-    ]
+      { sender: friendId, receiver: req.user.id },
+    ],
   }).sort({ createdAt: 1 });
 
   res.json(chats);
@@ -22,8 +22,8 @@ export const getChatHistory = async (req, res) => {
     const messages = await ChatMessage.find({
       $or: [
         { sender: userId, receiver: friendId },
-        { sender: friendId, receiver: userId }
-      ]
+        { sender: friendId, receiver: userId },
+      ],
     }).sort({ createdAt: 1 });
 
     res.status(200).json(messages);
@@ -41,7 +41,7 @@ export const markAsRead = async (req, res) => {
       {
         sender: friendId,
         receiver: userId,
-        isRead: false
+        isRead: false,
       },
       { isRead: true }
     );
@@ -54,7 +54,7 @@ export const markAsRead = async (req, res) => {
 
 export const getUnreadCounts = async (req, res) => {
   try {
-    const userId = req.user.id; // or req.user._id if that's what your auth sets
+    const userId = req.user.id;
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -88,11 +88,10 @@ export const getUnreadCounts = async (req, res) => {
   }
 };
 
-
 export const markMessagesRead = async (req, res) => {
   try {
-    const userId = req.user.id;     
-    const friendId = req.params.friendId; 
+    const userId = req.user.id;
+    const friendId = req.params.friendId;
 
     await ChatMessage.updateMany(
       {
@@ -105,7 +104,7 @@ export const markMessagesRead = async (req, res) => {
 
     const io = req.app.get("io");
     io.to(String(friendId)).emit("messages:read", {
-      by: userId,          
+      by: userId,
       //friendId: userId,
     });
 

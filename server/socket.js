@@ -8,7 +8,7 @@ import { setIo } from "./controllers/friendController.js";
 export function initSocket(server) {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: process.env.FRONTEND_URL || "http://localhost:5173",
       methods: ["GET", "POST"],
     },
   });
@@ -36,7 +36,7 @@ export function initSocket(server) {
     await OnlineStatus.findOneAndUpdate(
       { user: socket.userId },
       { isOnline: true, lastSeen: null },
-      { upsert: true }
+      { upsert: true },
     );
 
     socket.broadcast.emit("user-online", {
@@ -65,10 +65,10 @@ export function initSocket(server) {
         if (!senderUser || !receiverUser) return;
 
         const senderBlocksReceiver = senderUser.blocked?.some(
-          (id) => String(id) === receiverId
+          (id) => String(id) === receiverId,
         );
         const receiverBlocksSender = receiverUser.blocked?.some(
-          (id) => String(id) === senderId
+          (id) => String(id) === senderId,
         );
 
         if (senderBlocksReceiver || receiverBlocksSender) {
@@ -104,12 +104,10 @@ export function initSocket(server) {
           isRead: chat.isRead,
           status: "delivered",
         });
-
       } catch (err) {
         console.error("send-message error:", err);
       }
     });
-
 
     socket.on("typing", ({ to }) => {
       if (!to) return;
@@ -120,7 +118,7 @@ export function initSocket(server) {
       if (!to || !offer) return;
       try {
         const caller = await User.findById(socket.userId).select(
-          "username email"
+          "username email",
         );
 
         io.to(String(to)).emit("call:incoming", {
@@ -159,7 +157,7 @@ export function initSocket(server) {
 
       await OnlineStatus.findOneAndUpdate(
         { user: socket.userId },
-        { isOnline: false, lastSeen: new Date() }
+        { isOnline: false, lastSeen: new Date() },
       );
 
       io.emit("user-offline", { userId: socket.userId });
