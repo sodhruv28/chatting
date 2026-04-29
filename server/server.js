@@ -27,7 +27,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:5175",
-  "https://chattingvc.netlify.app"
+  "https://chattingvc.netlify.app",
+  "https://chattingvc.netlify.app/"
 ].filter(Boolean);
 
 app.use(cors({
