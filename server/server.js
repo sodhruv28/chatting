@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import http from "http";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 import authRoutes from "./router/authRoute.js";
 import userRoutes from "./router/userRoute.js";
@@ -21,6 +23,28 @@ if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
 
 const app = express();
 const server = http.createServer(app);
+
+// Security Middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false
+}));
+
+// Rate Limiting
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again after 15 minutes"
+});
+
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // Limit each IP to 10 login/register attempts per hour
+  message: "Too many login attempts, please try again later"
+});
+
+app.use("/api/", generalLimiter);
+app.use("/api/auth", authLimiter);
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
