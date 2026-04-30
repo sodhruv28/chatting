@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
-import { createPortal } from "react-dom";
 import socket from "../socket";
 import { toast } from "sonner";
 
@@ -179,7 +178,7 @@ const VideoCall = forwardRef(({ friendId, friend }, ref) => {
 
   return (
     <>
-      {incomingCall && !inCall && createPortal(
+      {incomingCall && !inCall && (
         <div className="fixed top-24 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-[99999] bg-surface border border-primary/30 p-5 rounded-[24px] shadow-2xl flex flex-col gap-4 animate-in slide-in-from-top-4 duration-300">
           <div className="flex flex-col items-center gap-2">
             <div className="w-16 h-16 bg-primary/20 text-primary rounded-full flex items-center justify-center text-2xl mb-2 animate-pulse">
@@ -204,11 +203,10 @@ const VideoCall = forwardRef(({ friendId, friend }, ref) => {
               Accept
             </button>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
 
-      {inCall && createPortal(
+      {inCall && (
         <div className="fixed inset-0 z-[99999] bg-slate-950 flex flex-col animate-in fade-in zoom-in-95 duration-300">
           <div className="p-6 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
             <div>
@@ -258,8 +256,7 @@ const VideoCall = forwardRef(({ friendId, friend }, ref) => {
               <i className="bi bi-camera-video-fill"></i>
             </button>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
     </>
   );
