@@ -16,6 +16,7 @@ export default function Chat() {
   
   const navigate = useNavigate()
   const messagesEndRef = useRef(null)
+  const videoCallRef = useRef(null)
   const user = JSON.parse(localStorage.getItem("user") || "{}")
 
   useEffect(() => {
@@ -147,7 +148,9 @@ export default function Chat() {
         </div>
 
         <div className="flex items-center gap-1">
-          <VideoCall friendId={friendId} friend={friend} />
+          <button onClick={() => videoCallRef.current?.startCall()} className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-primary transition-all hover:bg-primary/10 rounded-full">
+            <i className="bi bi-camera-video text-lg"></i>
+          </button>
           <button className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-primary transition-all hover:bg-primary/10 rounded-full">
             <i className="bi bi-telephone text-lg"></i>
           </button>
@@ -165,14 +168,14 @@ export default function Chat() {
 
         {messages.map((m) => (
           <div key={m.id} className={`flex ${m.self ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`message-bubble ${m.self ? "message-sent" : "message-received"} shadow-sm`}>
-                <p className="text-[15px] leading-relaxed">{m.text}</p>
+            <div className={`max-w-[75%] w-fit px-5 py-3.5 text-[15px] leading-relaxed shadow-sm ${m.self ? "bg-primary text-white rounded-[24px] rounded-br-sm" : "bg-surface dark:bg-[#303036] border border-[var(--border-color)] text-text-main rounded-[24px] rounded-bl-sm"}`}>
+                <p className="break-words">{m.text}</p>
                 <div className={`flex items-center gap-1.5 mt-1.5 ${m.self ? "justify-end" : "justify-start"}`}>
-                  <span className={`text-[10px] font-medium ${m.self ? "text-white/70" : "text-text-muted/70"}`}>
+                  <span className={`text-[10px] font-bold ${m.self ? "text-white/70" : "text-text-muted/70"}`}>
                     {m.time}
                   </span>
                   {m.self && (
-                    <i className={`bi bi-check2-all text-[14px] ${m.isRead ? "text-indigo-200" : "text-white/40"}`} />
+                    <i className={`bi bi-check2-all text-[14px] ${m.isRead ? "text-[#a5b4fc]" : "text-white/40"}`} />
                   )}
                 </div>
             </div>
@@ -220,6 +223,9 @@ export default function Chat() {
           </button>
         </form>
       </div>
+
+      {/* Video Call Component at root to avoid stacking context issues */}
+      <VideoCall ref={videoCallRef} friendId={friendId} friend={friend} />
     </div>
   )
 }

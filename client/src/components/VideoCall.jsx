@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import socket from "../socket";
 import { toast } from "sonner";
 
@@ -7,7 +6,7 @@ const ICE_SERVERS = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
 
-export default function VideoCall({ friendId, friend }) {
+const VideoCall = forwardRef(({ friendId, friend }, ref) => {
   const [inCall, setInCall] = useState(false);
   const [incomingCall, setIncomingCall] = useState(null);
 
@@ -173,19 +172,14 @@ export default function VideoCall({ friendId, friend }) {
     }
   };
 
-  return (
-    <>
-      {!inCall && !incomingCall && (
-        <button 
-          onClick={startCall}
-          className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-primary transition-all hover:bg-primary/10 rounded-full"
-        >
-          <i className="bi bi-camera-video text-lg"></i>
-        </button>
-      )}
+  useImperativeHandle(ref, () => ({
+    startCall
+  }));
 
-      {incomingCall && !inCall && createPortal(
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-[100] bg-surface/95 backdrop-blur-xl border border-primary/30 p-5 rounded-[24px] shadow-2xl flex flex-col gap-4 animate-in slide-in-from-top-4 duration-300">
+  return (
+    <div className="z-[9999]">
+      {incomingCall && !inCall && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-surface/95 backdrop-blur-xl border border-primary/30 p-5 rounded-[24px] shadow-2xl flex flex-col gap-4 animate-in slide-in-from-top-4 duration-300">
           <div className="flex flex-col items-center gap-2">
             <div className="w-16 h-16 bg-primary/20 text-primary rounded-full flex items-center justify-center text-2xl mb-2 animate-pulse">
               <i className="bi bi-telephone-inbound-fill"></i>
@@ -209,12 +203,11 @@ export default function VideoCall({ friendId, friend }) {
               Accept
             </button>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
 
-      {inCall && createPortal(
-        <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-3xl flex flex-col animate-in fade-in zoom-in-95 duration-300">
+      {inCall && (
+        <div className="fixed inset-0 bg-background/95 backdrop-blur-3xl flex flex-col animate-in fade-in zoom-in-95 duration-300">
           <div className="p-6 flex justify-between items-center bg-gradient-to-b from-background/80 to-transparent">
             <div>
               <h2 className="text-xl font-black text-text-main">Video Call</h2>
@@ -263,9 +256,10 @@ export default function VideoCall({ friendId, friend }) {
               <i className="bi bi-camera-video-fill"></i>
             </button>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
-    </>
+    </div>
   );
-}
+});
+
+export default VideoCall;
