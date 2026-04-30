@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import api from "../api/axios"
 import socket from "../socket"
 import { toast } from "sonner"
+import VideoCall from "../components/VideoCall"
 
 export default function Chat() {
   const { friendId } = useParams()
@@ -146,9 +147,7 @@ export default function Chat() {
         </div>
 
         <div className="flex items-center gap-1">
-          <button className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-primary transition-all hover:bg-primary/10 rounded-full">
-            <i className="bi bi-camera-video text-lg"></i>
-          </button>
+          <VideoCall friendId={friendId} friend={friend} />
           <button className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-primary transition-all hover:bg-primary/10 rounded-full">
             <i className="bi bi-telephone text-lg"></i>
           </button>
