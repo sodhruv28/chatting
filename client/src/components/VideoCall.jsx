@@ -55,6 +55,11 @@ export default function VideoCall({ friendId, friend }) {
 
   const getMedia = async () => {
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast.error("Your browser blocks camera access on unsecure connections. Please use HTTPS or localhost.");
+        return null;
+      }
+      
       // First try to get both video and audio
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
