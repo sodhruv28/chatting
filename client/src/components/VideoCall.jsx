@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import socket from "../socket";
+import { toast } from "sonner";
 
 const ICE_SERVERS = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -52,15 +54,21 @@ export default function VideoCall({ friendId, friend }) {
   }, []);
 
   const getMedia = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
-    localStreamRef.current = stream;
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = stream;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+      localStreamRef.current = stream;
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+      return stream;
+    } catch (err) {
+      console.error("Error accessing media devices:", err);
+      toast.error("Could not access camera or microphone. Please check your permissions and devices.");
+      return null;
     }
-    return stream;
   };
 
   const createPeer = (to) => {
@@ -81,8 +89,12 @@ export default function VideoCall({ friendId, friend }) {
   };
 
   const startPeer = async (isCaller, offer, to) => {
-    setInCall(true);
     const stream = await getMedia();
+    if (!stream) {
+      endCall();
+      return;
+    }
+    setInCall(true);
     const pc = createPeer(to);
     stream.getTracks().forEach((t) => pc.addTrack(t, stream));
 
@@ -137,7 +149,7 @@ export default function VideoCall({ friendId, friend }) {
         </button>
       )}
 
-      {incomingCall && !inCall && (
+      {incomingCall && !inCall && createPortal(
         <div className="fixed top-24 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-[100] bg-surface/95 backdrop-blur-xl border border-primary/30 p-5 rounded-[24px] shadow-2xl flex flex-col gap-4 animate-in slide-in-from-top-4 duration-300">
           <div className="flex flex-col items-center gap-2">
             <div className="w-16 h-16 bg-primary/20 text-primary rounded-full flex items-center justify-center text-2xl mb-2 animate-pulse">
@@ -162,10 +174,11 @@ export default function VideoCall({ friendId, friend }) {
               Accept
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {inCall && (
+      {inCall && createPortal(
         <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-3xl flex flex-col animate-in fade-in zoom-in-95 duration-300">
           <div className="p-6 flex justify-between items-center bg-gradient-to-b from-background/80 to-transparent">
             <div>
@@ -215,7 +228,8 @@ export default function VideoCall({ friendId, friend }) {
               <i className="bi bi-camera-video-fill"></i>
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
