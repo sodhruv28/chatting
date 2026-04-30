@@ -64,11 +64,12 @@ export default function VideoCall({ friendId, friend }) {
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
-      return stream;
     } catch (err) {
+      console.error("Media Device Error:", err.name, err.message);
+      
       if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
         try {
-          // Fallback: try to get audio only (e.g., if user has no webcam but has a mic)
+          // Fallback: try to get audio only
           const audioStream = await navigator.mediaDevices.getUserMedia({
             video: false,
             audio: true,
@@ -80,14 +81,22 @@ export default function VideoCall({ friendId, friend }) {
           }
           return audioStream;
         } catch (audioErr) {
-          console.error("Error accessing audio device:", audioErr);
-          toast.error("Could not access camera or microphone. Please check your devices.");
+          console.error("Audio fallback error:", audioErr);
+          toast.error("No camera or microphone found on your device.");
           return null;
         }
       }
       
-      console.error("Error accessing media devices:", err);
-      toast.error("Could not access camera or microphone. Please check your permissions.");
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        toast.error("Permission denied. Please click the lock icon in your address bar and allow camera/microphone access.", { duration: 5000 });
+      } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
+        toast.error("Camera or microphone is already in use by another application.");
+      } else if (err.name === "OverconstrainedError") {
+        toast.error("Your camera does not support the required resolution or framerate.");
+      } else {
+        toast.error(`Media access error: ${err.message || err.name}`);
+      }
+      
       return null;
     }
   };
