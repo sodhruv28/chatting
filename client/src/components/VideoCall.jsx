@@ -179,7 +179,10 @@ const VideoCall = forwardRef(({ friendId, friend }, ref) => {
   return (
     <>
       {incomingCall && !inCall && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-[99999] bg-surface border border-primary/30 p-5 rounded-[24px] shadow-2xl flex flex-col gap-4 animate-in slide-in-from-top-4 duration-300">
+        <div 
+          style={{ position: 'fixed', top: '10%', left: '5%', width: '90%', zIndex: 99999 }}
+          className="bg-surface border border-primary/30 p-5 rounded-[24px] shadow-2xl flex flex-col gap-4"
+        >
           <div className="flex flex-col items-center gap-2">
             <div className="w-16 h-16 bg-primary/20 text-primary rounded-full flex items-center justify-center text-2xl mb-2 animate-pulse">
               <i className="bi bi-telephone-inbound-fill"></i>
@@ -207,7 +210,10 @@ const VideoCall = forwardRef(({ friendId, friend }, ref) => {
       )}
 
       {inCall && (
-        <div className="fixed inset-0 z-[99999] bg-slate-950 flex flex-col animate-in fade-in zoom-in-95 duration-300">
+        <div 
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999999, backgroundColor: '#020617' }}
+          className="flex flex-col"
+        >
           <div className="p-6 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
             <div>
               <h2 className="text-xl font-black text-white">Video Call</h2>
