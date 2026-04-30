@@ -55,6 +55,7 @@ export default function VideoCall({ friendId, friend }) {
 
   const getMedia = async () => {
     try {
+      // First try to get both video and audio
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
@@ -65,8 +66,28 @@ export default function VideoCall({ friendId, friend }) {
       }
       return stream;
     } catch (err) {
+      if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+        try {
+          // Fallback: try to get audio only (e.g., if user has no webcam but has a mic)
+          const audioStream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: true,
+          });
+          toast.info("No camera found. Proceeding with audio only.");
+          localStreamRef.current = audioStream;
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = audioStream;
+          }
+          return audioStream;
+        } catch (audioErr) {
+          console.error("Error accessing audio device:", audioErr);
+          toast.error("Could not access camera or microphone. Please check your devices.");
+          return null;
+        }
+      }
+      
       console.error("Error accessing media devices:", err);
-      toast.error("Could not access camera or microphone. Please check your permissions and devices.");
+      toast.error("Could not access camera or microphone. Please check your permissions.");
       return null;
     }
   };
