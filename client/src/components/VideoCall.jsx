@@ -123,24 +123,30 @@ const VideoCall = forwardRef(({ friendId, friend }, ref) => {
   };
 
   const startPeer = async (isCaller, offer, to) => {
-    const stream = await getMedia();
-    if (!stream) {
-      endCall();
-      return;
-    }
-    setInCall(true);
-    const pc = createPeer(to);
-    stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+    try {
+      const stream = await getMedia();
+      if (!stream) {
+        endCall();
+        return;
+      }
+      setInCall(true);
+      const pc = createPeer(to);
+      stream.getTracks().forEach((t) => pc.addTrack(t, stream));
 
-    if (isCaller) {
-      const offerDesc = await pc.createOffer();
-      await pc.setLocalDescription(offerDesc);
-      socket.emit("call:offer", { to, offer: offerDesc });
-    } else {
-      await pc.setRemoteDescription(offer);
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      socket.emit("call:answer", { to, answer });
+      if (isCaller) {
+        const offerDesc = await pc.createOffer();
+        await pc.setLocalDescription(offerDesc);
+        socket.emit("call:offer", { to, offer: offerDesc });
+      } else {
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.emit("call:answer", { to, answer });
+      }
+    } catch (err) {
+      console.error("WebRTC Error:", err);
+      toast.error(`Call Error: ${err.message}`);
+      endCall();
     }
   };
 

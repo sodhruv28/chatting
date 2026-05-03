@@ -1,0 +1,32 @@
+services:
+  # Backend Server
+  - type: web
+    name: chatting-server
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
+
+  # Frontend Client
+  - type: web
+    name: chatting-client
+    env: static
+    plan: free
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishDir: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false

@@ -69,6 +69,16 @@ app.use("/api/", generalLimiter);
 app.use("/api/auth", authLimiter);
 app.use(express.json());
 
+// Health Check API
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    message: "Server is healthy and running"
+  });
+});
+
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
